@@ -1,0 +1,8 @@
+/scanner_plugins/
+/logs/
+/__pycache__/
+*.pyc
+*.log
+*.devo
+*.raw
+*.rparam
