@@ -1,6 +1,7 @@
 /scanner_plugins/
 /logs/
 /__pycache__/
+/venv/
 *.pyc
 *.log
 *.devo
