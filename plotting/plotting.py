@@ -106,121 +106,65 @@ def create_figure(scans:list[Scan], observables:list[Observable], mode:str, plot
     returns:
         None. But the figure and axis objects are created
     """
-    num_axes = len(scans) + len(observables)
     figs = []
     axs = []
 
+
+
     if plot_type == "plr":
         ylabel = "Profile Likelihood Ratio"
+        def set_data(ax, xdata, ydata, norm):
+            ax.scatter(xdata, ydata, marker='.', alpha=0.5)
+            return
     if plot_type == "hist":
         ylabel = "counts"
+        def set_data(ax, xdata, ydata, norm):
+            ax.hist(xdata, bins=20, alpha=0.5, density=norm)
+            return
 
 
     if mode == "default":
 
+        normalize = False
+
         for scan in scans:
             for obs in observables:
-                fig, _ = plt.subplots()
-                ax = fig.add_subplot(111)
+                fig, ax = plt.subplots()
+        
+                set_data(ax, scan.data[obs.key], scan.plr, normalize)
 
                 ax.set_xlabel(f'{obs.label} {obs.dimension}')
                 ax.set_ylabel(ylabel)
                 ax.set_title(scan.name)
                 ax.minorticks_on()
 
+                fig.tight_layout()
+
                 figs.append(fig)
-                axs.append(ax)
+                axs.append(axs)
+
+                
 
     if mode == "compare":
 
+        normalize = True
+
         for obs in observables:
-            fig, _ = plt.subplots()
-            ax = fig.add_subplot(111)
+            fig, ax = plt.subplots()
+
+            for scan in scans:
+                set_data(ax, scan.data[obs.key], scan.plr, normalize)
             
-            ax.set_xlabel(obs.dimension)
+            ax.set_xlabel(f'{obs.label} {obs.dimension}')
             ax.set_ylabel(ylabel)
             ax.legend([scan.name for scan in scans])
             ax.minorticks_on()
 
-            figs.append(fig)
+            figs.append(figs)
             axs.append(ax)
+            
                 
-    return (figs, axs)
-
-        
-                
-
-
-
-
-"""
-creating the plots
-"""
-#def plot_plr(scans: list[Scan], observables: list[Observable]) -> None:
-#    """
-#    creates one figure for all observables specified as command line options as scatter plots
-#    against the profile likelihood ratio.
-#    with this function no comparison plots for two different scans can be made.
-#
-#        scans: list of'Scan' objects that contains the output data from a gambit scan.
-#        observables: list of 'Observable' objects that are intended for the plot
-#
-#    returns:
-#        None. The plot is instead saved as a pdf
-#    """
-#    for scan in scans:
-#        fig = plt.figure()
-#
-#        ax = fig.add_subplot(111)
-#
-#        dim = []
-#
-#        for obs in observables:
-#            dim.append(obs.dimension)
-#            ax.scatter(scan.data[obs.key], scan.plr, marker='.', alpha=0.5, label=obs.label)
-#
-#        if dim.count(dim[0]) != len(observables):
-#            raise ValueError("if you want to plot different observables in one scatter plot, all the dimesnions must be the same")
-#
-#        ax.set_xlabel(dim[0])
-#        ax.set_ylabel("Profile Likelihood Ratio")
-#
-#        ax.minorticks_on()
-#        ax.legend(frameon=False, draggable=True)
-#        ax.set_title(scan.name)
-#
-#        fig.tight_layout()
-#
-#        plt.show()
-#    
-#    return
-#   
-#
-#def plot_plr_comparison(scans:list[Scan], observables:list[Observable]) -> None:
-#    """
-#    creates comparison plots for the different provided scans.
-#    All Observables are plotted in different figures.
-#
-#        scans: list of'Scan' objects that contains the output data from a gambit scan.
-#        observables: list of 'Observable' objects that are intended for the plot
-#
-#    returns:
-#        None. The plot is instead saved as a pdf
-#     """
-#    for obs in observables:
-#        fig = plt.figure()
-#        ax = fig.add_subplot(111)
-#
-#        for scan in scans:
-#            ax.scatter(scan.data[obs.key], scan.plr, marker='.', alpha=0.5, label=scan.name)
-#        
-#        ax.set_xlabel(f'{obs.label} {obs.dimension}')
-#        ax.set_ylabel("Profile Likelihood Ratio")
-#        
-#        ax.legend(frameon=False, draggable=True)
-#        ax.minorticks_on()
-#
-#        plt.show()
+    return  (figs, axs)                   
 
 
 
@@ -229,14 +173,16 @@ creating the plots
 conditionals
 """
 if args.mode is None:
-    figs, axs = create_figure(scans, observables, 'default', args.type)
-
-    axs[0].scatter(scans[0].data[observables[0].key], scans[0].plr, marker='.', alpha=0.5)
-    
-
-    plt.show()
+    mode = 'default'
+if args.mode == 'compare':
+    mode = 'compare'
 
 
+figs, axs = create_figure(scans, observables, mode, args.type)
+
+   
 
 
+
+plt.show()
     
