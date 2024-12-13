@@ -110,7 +110,6 @@ def create_figure(scans:list[Scan], observables:list[Observable], mode:str, plot
     axs = []
 
 
-
     if plot_type == "plr":
         ylabel = "Profile Likelihood Ratio"
         def set_data(ax, xdata, ydata, norm):
@@ -159,6 +158,9 @@ def create_figure(scans:list[Scan], observables:list[Observable], mode:str, plot
             ax.set_ylabel(ylabel)
             ax.legend([scan.name for scan in scans])
             ax.minorticks_on()
+
+            
+            fig.tight_layout()
 
             figs.append(figs)
             axs.append(ax)

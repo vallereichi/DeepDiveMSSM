@@ -90,7 +90,7 @@ Scanner:
       tol: 0.1
     random:
       plugin: random
-      point_number: 100
+      point_number: 4500
       like: LogLike
   default_output_path: runs/MSSM_random/scanner_plugins/
 ObsLikes:
@@ -107,9 +107,6 @@ ObsLikes:
   - purpose: Observable
     capability: muon_gm2
   - purpose: Observable
-    capability: all_BFs
-    printme: true
-  - purpose: Observable
     capability: MSSM_spectrum
     type: map_str_dbl
 Rules:
@@ -119,30 +116,6 @@ Rules:
   - capability: MSSM_spectrum
     type: Spectrum
     function: make_MSSM_precision_spectrum_none
-  - capability: Reference_Higgs_decay_rates
-    function: Ref_SM_Higgs_decays_table
-  - capability: Reference_SM_other_Higgs_decay_rates
-    function: Ref_SM_other_Higgs_decays_table
-  - capability: Reference_SM_A0_decay_rates
-    function: Ref_SM_A0_decays_table
-  - capability: Higgs_decay_rates
-    function: MSSM_h0_1_decays
-  - capability: h0_2_decay_rates
-    function: h0_2_decays
-  - capability: A0_decay_rates
-    function: A0_decays
-  - capability: H_plus_decay_rates
-    function: H_plus_decays
-  - capability: t_decay_rates
-    function: t_decays
-  - capability: decay_rates
-    function: all_decays
-    options:
-      drop_SLHA_file: true
-      SLHA_output_filename: decay_rates
-  - capability: all_BFs
-    function: get_decaytable_as_map
-  - capability: mw
     function: mw_from_MSSM_spectrum
   - capability: mh
     function: mh_from_MSSM_spectrum
