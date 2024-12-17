@@ -60,4 +60,5 @@ if args.info:
 if args.mode == 'plr' or args.mode == None:
     plots.plot_plr(scans, observable)
 
-
+if args.mode == 'hist':
+    plots.plot_hist(scans, observable)
