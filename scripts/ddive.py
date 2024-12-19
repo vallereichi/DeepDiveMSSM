@@ -6,6 +6,7 @@ import util
 import plots
 import argparse
 from pathlib import Path
+import matplotlib.pyplot as plt
 
 
 """
@@ -14,7 +15,7 @@ command line options
 parser = argparse.ArgumentParser()
 parser.add_argument('-p', '--path', nargs='+', required=True, help="select one or more filepaths")
 parser.add_argument('-i', '--info', action='store_true', help="print general info about the selected input files")
-parser.add_argument('-o', '--observable', help="if provided this observable will be searched for and then gets plotted")
+parser.add_argument('-o', '--observable', nargs='*', help="if provided this observable will be searched for and then gets plotted")
 parser.add_argument('-l', '--label', help="specify a label for the provided observable other than its plain text value")
 parser.add_argument('-m', '--mode', choices=['plr', 'hist'], help="choose how to plot the data")
 
@@ -39,12 +40,15 @@ for path in args.path:
 
 
 # load observable
-if args.label is None:
-    label = args.observable
-else:
-    label = args.label
+observables = []
+for id, search_key in enumerate(args.observable):
+    if args.label is None:
+        label = search_key
+    else:
+        label = args.label[id]
 
-observable = util.create_Observable_object(args.observable, label, scans[0].data.columns)
+    observables.append(util.create_Observable_object(search_key, label, scans[0].data.columns))
+
 
 
 # info print 
@@ -58,7 +62,10 @@ if args.info:
 
 # plot observable
 if args.mode == 'plr' or args.mode == None:
-    plots.plot_plr(scans, observable)
+    for obs in observables:
+        plots.plot_plr(scans, obs)
 
 if args.mode == 'hist':
-    plots.plot_hist(scans, observable)
+    for obs in observables:
+        plots.plot_hist(scans, obs)
+
