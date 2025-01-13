@@ -1,281 +1,87 @@
 import numpy as np
 import random
 import likelihoods
+from likelihoods import comb_likelihood, eval_likelihood
+
+# define parameters
+NP = 100
+F = 0.8
+Cr = 0.8
+
+conv_threshold = 1e-3
+MAX_ITER = 10000
+
+ranges = [[20, 60], [30, 90]]
+likelihood_list = [(likelihoods.gaussian, [50, 20]), (likelihoods.gaussian, [70, 10])]
+
+# initialize population
+population_list = []
+population = [[random.uniform(ranges[i][0], ranges[i][1]) for i in range(len(ranges))] for _ in range(NP)]   
+while len(np.unique(population, axis=0)) != len(population):          
+    population = [[random.uniform(ranges[i][0], ranges[i][1]) for i in range(len(ranges))] for _ in range(NP)]   
+population_list.append(population)
 
 
 
-
-# Initialization
-def initialize(parameter_space:list[tuple], NP:int) -> list[np.array]:
-    """
-    initialize the first generation of target vectors. The initialization randomly selects points from the parameter space and creates NP population points.
-
-    parameters:
-        parameter_space: list of tuples containing the ranges in all the dimensions of the parameter space
-        NP:              size of population
-
-    returns:    
-        population of points in the parameter space
-    """
-    population = []
-    for _ in range(NP):
-        point = []
-        for dim in parameter_space:
-            point.append(random.uniform(dim[0], dim[1]))
-        population.append(np.array(point))
-    return population
+print("\nInitial population:")
+print(np.unique(population, axis=0))
 
 
+print("\n ------------------- \nstart differential evolution:")
 
-# Mutation
-def mutation(population:list[np.array], F:float, parameter_space:list[tuple]) -> list[np.array]:
-    """
-    Mutate the population using the DE/rand/1 mutation strategy.
+while len(population_list) < MAX_ITER:
 
-    parameters:
-        population:      list of points in the parameter space
-        F:               mutation factor
-        parameter_space: list of tuples containing the ranges in all the dimensions of the parameter space
-    
-    returns:
-        mutated population
-    """
-    NP = len(population)
-    mutated_population = []
-    for i in range(NP):
-        a, b, c = random.sample(population, 3)
-        x = population[i]
-        v = a + F*(b - c)
-        
-        # Ensure that the mutated vector is within the parameter space  TODO: create more implementations
-        for j in range(len(v)):
-            v[j] = max(min(v[j], parameter_space[j][1]), parameter_space[j][0])        
+    # perform mutation in the rand/1 scheme
+    target = random.choice(population)
+    target_id = np.where([np.array_equal(target, indiv) for indiv in population])[0][0]
+
+    a, b, c = np.array(random.sample(population, 3))
+    while any(np.array_equal(x, target) for x in [a, b, c]):
+        a, b, c = np.array(random.sample(population, 3))
+
+    donor = a + F * (b - c)
+
+    print("\nTarget:", target)
+    print("Donor:", donor)
 
 
-        mutated_population.append(v)
-    return mutated_population
-
-
-# Crossover
-def crossover(population:list[np.array], mutated_population:list[np.array], CR:float) -> list[np.array]:
-    """
-    Perform the crossover operation between the population and the mutated population.
-
-    parameters:
-        population:          list of points in the parameter space
-        mutated_population:  list of points in the parameter space
-        CR:                  crossover rate
-    
-    returns:
-        crossovered population
-    """
-    NP = len(population)
-    crossovered_population = []
-    for i in range(NP):
-        x = population[i]
-        v = mutated_population[i]
-        u = np.zeros_like(x)
-        for j in range(len(x)):
-            if random.random() < CR:
-                u[j] = v[j]
-            else:
-                u[j] = x[j]
-        crossovered_population.append(u)
-
-    l = random.randint(0, len(x)-1)
-    crossovered_population[l] = population[l]
-
-    return crossovered_population
-
-
-# Selection
-def selection(population:list[np.array], crossovered_population:list[np.array], lh:list[tuple]) -> list[np.array]:
-    """
-    Select the best population between the original population and the crossovered population.
-
-    parameters:
-        population:          list of points in the parameter space
-        crossovered_population:  list of points in the parameter space
-        lh:                      list of likelihood functions for each dimension of the parameter space. tuple(lh_name, mu, sigma)
-    
-    returns:
-        selected population
-    """
-    NP = len(population)
-    lh_funcs = [getattr(likelihoods, lh[i][0]) for i in range(len(lh))]
-    mus = [lh[i][1] for i in range(len(lh))]
-    sigmas = [lh[i][2] for i in range(len(lh))]
-
-
-    selected_population = []
-    for i in range(NP):
-        x = population[i]
-        u = crossovered_population[i]
-
-        likelihood = lambda x: sum([lh_funcs[j](x[j], mus[j], sigmas[j]) for j in range(len(x))])
-        if likelihood(u) > likelihood(x):
-            selected_population.append(u)
+    # perform binary crossover
+    trial = np.zeros_like(target)
+    for k in range(len(target)):
+        if random.random() <= Cr:
+            trial[k] = donor[k]
         else:
-            selected_population.append(x)
-    return selected_population
+            trial[k] = target[k]
 
+    rand_dim = random.randint(0, len(target) - 1)
+    trial[rand_dim] = donor[rand_dim]
 
-# calculate average combined log likelihood of population
-def average_combined_log_likelihood(population:list[np.array], lh:list[tuple]) -> float:
-    """
-    Calculate the average combined log likelihood of the population.
-
-    parameters:
-        population: list of points in the parameter space
-        lh:         list of likelihood functions for each dimension of the parameter space. tuple(lh_name, mu, sigma)
-    
-    returns:
-        average combined log likelihood of the population
-    """
-    NP = len(population)
-    lh_funcs = [getattr(likelihoods, lh[i][0]) for i in range(len(lh))]
-    mus = [lh[i][1] for i in range(len(lh))]
-    sigmas = [lh[i][2] for i in range(len(lh))]
-
-    likelihoods_tmp = [sum([lh_funcs[j](x[j], mus[j], sigmas[j]) for j in range(len(x))]) for x in population]
-    return np.mean(likelihoods_tmp)
-
-def best_likelihood_point(population:list[np.array], lh:list[tuple]) -> float:
-    """
-    Get the best point in the parameter space based on the likelihoods.
-
-    parameters:
-        lh: list of likelihoods for each point in the parameter space. tuple(lh_name, mu, sigma)
-    
-    returns: float
-    """
-    lh_funcs = [getattr(likelihoods, lh[i][0]) for i in range(len(lh))]
-    mus = [lh[i][1] for i in range(len(lh))]
-    sigmas = [lh[i][2] for i in range(len(lh))]
-
-    likelihoods_tmp = [sum([lh_funcs[j](x[j], mus[j], sigmas[j]) for j in range(len(x))]) for x in population]
-    return population[np.argmax(likelihoods_tmp)]
+    print("Trial:", trial)
 
 
 
+    # selection
+    target_lh = comb_likelihood([eval_likelihood(lh[0], lh[1], target[i]) for i, lh in enumerate(likelihood_list)])
+    trial_lh = comb_likelihood([eval_likelihood(lh[0], lh[1], trial[i]) for i, lh in enumerate(likelihood_list)])
 
+    if trial_lh > target_lh:
+        if not any(np.array_equal(trial, indiv) for indiv in population):
+            population[target_id] = trial
 
-# Main DE function for rand/1/bin
-def rand_one_bin(parameter_space:list[tuple], NP:int, F:float, CR:float, lh:list[tuple], convergence_thresh:float = 1e-3, max_generations:int = 10000) -> list[np.array]:
-    """
-    Perform the Differential Evolution algorithm.
+    population_list.append(population)
 
-    parameters:
-        parameter_space: list of tuples containing the ranges in all the dimensions of the parameter space
-        NP:              size of population
-        F:               mutation factor
-        CR:              crossover rate
-        lh:              list of likelihood functions for each dimension of the parameter space. tuple(lh_name, mu, sigma)
-        convergence_thresh: threshold for convergence
-        max_generations: maximum number of generations
+    improvement = max(trial_lh-target_lh, 0)
 
-    returns:
-        best point in the parameter space
-    """
-    diff = 1
-    count = 0
-    generations = []
-    population = initialize(parameter_space, NP)
-    generations.append(population)
+    print("\nTarget likelihood:", target_lh)
+    print("Trial likelihood:", trial_lh)
+    print("Improvement:", improvement)
 
-    while diff > convergence_thresh and count < max_generations:
-        mutated_population = mutation(population, F, parameter_space)
-        crossovered_population = crossover(population, mutated_population, CR)
-        population = selection(population, crossovered_population, lh)
+    print("\nnumber of populations: ", len(population_list))
+    print("-------------------")
 
-        generations.append(population)
-        diff = abs(average_combined_log_likelihood(population, lh) - average_combined_log_likelihood(generations[-2], lh))
-        count += 1
-    return generations
+    if 0 < improvement < conv_threshold:
+        break
 
-
-# advanced mutation and crossover strategies
-def genearalized_mutation(population:list[np.array],x_1:tuple, F:list[float], Q:float, lambda_:float, lh:list[tuple]) -> list[np.array]:
-    """
-    Perform the generalized mutation operation.
-
-    parameters:
-        population: list of points in the parameter space
-        x_1: point in the parameter space. tuple(nü.array, idx)
-        F: list of mutation factors
-        Q: number of difference vectors
-        lambda_: mutation rate
-        lh: list of likelihood functions for each dimension of the parameter space. tuple(lh_name, mu, sigma)
-    
-    returns:
-        mutated population
-    """
-    x_best = best_likelihood_point(population, lh)
-    random_sample = random.sample(population, 2*Q)
-    for i in range(2*Q):
-        if np.array_equal(random_sample[i], x_1[0]) == True:
-            random_sample = random.sample(population, 2*Q)
-            break
-
-    b = random_sample[:Q]
-    c = random_sample[Q:]
-    Sum = sum([F[j]*(b[j] - c[j]) for j in range(Q-1)])
-
-    v = lambda_*x_best + (1-lambda_)*x_1[0] + Sum
-    mutated_population = population.copy()
-    mutated_population[x_1[1]] = v
-
-    return mutated_population
-    
-
-
-
-
-
-# Testing
-def test():
-    # example data
-    parameter_space = [(2, 43), (0, 99)]
-    NP = 10
-    F = 0.8
-    Cr = 0.8
-
-    lh_list = [
-        ("gaussian", 10, 30),
-        ("gaussian", 50, 20)
-    ]
-
-    population = initialize(parameter_space, NP)
-    mutated_population = genearalized_mutation(population, (population[0], 0), [0.8, 0.9], 3, 0.5, lh_list)
-    crossovered_population = crossover(population, mutated_population, Cr)
-    selected_population = selection(population, crossovered_population, lh_list)
-
-
-    print("\nParameter Space:")
-    print(parameter_space)
-    print("\nPopulation:")
-    for i in population:
-        print(i)
-
-    print("\nMutated Population:")
-    for i in mutated_population:
-        print(i)
-
-    print("\nCrossovered Population:")
-    for i in crossovered_population:
-        print(i)
-
-    print("\nSelected Population:")
-    for i in selected_population:
-        print(i)
-
-
-
-
-if __name__ == "__main__":
-    test()
-
-    generations = rand_one_bin([(2, 43), (0, 99)], 10, 0.8, 0.8, [("gaussian", 10, 30), ("gaussian", 50, 20)], 1e-3, 10000)
-    print(len(generations))
-
-
+print("\nFinal population:")
+for point in population:
+    print(point)
