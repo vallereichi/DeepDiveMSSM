@@ -15,10 +15,11 @@ My own implementation of the differential evolution algorithm. At the current st
 Everything in this folder handles different ouput formats from various MSSM scans. Since I am  at the moment only dealing with GAMBIT scans, I have only yet implemented support for the hdf5 file format and the GAMBIT specififc output files. The different scripts can be run as standalone scripts or from the main file "ddive.py". 
 
 supported options:
-    - get general information about a scan
-    - create profile likeklihiood plots for the different MSSM parameters
-    - create histogram plots for the different MMSM parameters
-    - every plot can be performed as a camparison plot, when two scans are provided
+
+- get general information about a scan
+- create profile likeklihiood plots for the different MSSM parameters
+- create histogram plots for the different MMSM parameters
+- every plot can be performed as a camparison plot, when two scans are provided
 
 ## runs
 
