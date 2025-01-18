@@ -1,78 +1,45 @@
-import re
 import os
 import h5py
 import pandas as pd
 import numpy as np
-from classes import Scan, Observable
+from pathlib import Path
 
-"""
-load files
-"""
-def load_hdf5(path:str) -> tuple[str, pd.DataFrame]:
-    data ={}
+def load_hdf5_file(path:str) -> list:
+    """
+    load a hdf5 file and return a list of pandas dataframes with a name associated to the file.
+    Each dataframe only contains valid points and a column with the profile likelihood ratio is added.
 
-    with h5py.File(path, 'r') as hdf5:
-        for group in hdf5.keys():
-            if group != "metadata":
-                for key in hdf5[group].keys():
-                    data[key] = hdf5[group][key][:]
+    parameters:
+        path: pass a path to a hdf5 file or a directory containing hdf5 files
 
-    data = pd.DataFrame(data)
-    name = os.path.splitext(os.path.basename(path))[0]
+    returns:
+        list of tuples with the name of the scan and the pandas dataframe
+    """
 
-    print("file loaded: ", path)
+    if os.path.isdir(path):
+        scans = []
+        hdf5_paths = [p for p in Path(path).rglob('*.hdf5')]
+        for file in hdf5_paths:
+            scans.append(load_hdf5_file(file)[0])
+        return scans
 
-    return name, data
+    # load hdf5 files
+    hdf5 = h5py.File(path, 'r')
+    group_key = [key for key in list(hdf5.keys()) if key != 'metadata'][0]
+    dataset = hdf5[group_key]
 
+    # create pandas dataframe
+    dataframe = {}
+    for key in dataset.keys():
+        dataframe[key] = dataset[key][:]
+    scan = pd.DataFrame(dataframe)
+    scan_name = os.path.splitext(os.path.basename(path))[0]
+    print("File loaded: ", scan_name, "; ", path)
 
-def create_Scan_object(name:str, data:pd.DataFrame) -> Scan:
-    num_keys = data.shape[1]
-    num_points = data.shape[0]
+    # choose only valid points
+    scan = scan[ scan['LogLike_isvalid'] == 1 ]
 
-    valid_logs = data[data['LogLike_isvalid'] == 1]
-    num_valid_points = valid_logs.shape[0]
+    # calculate profile likelihood ratio
+    scan['plr'] = np.exp(scan['LogLike'] - scan['LogLike'].max())
 
-    plr = np.exp(valid_logs['LogLike'] - valid_logs['LogLike'].max())
-
-    return Scan(name, valid_logs, plr, num_keys, num_points, num_valid_points)
-
-
-
-
-def create_Observable_object(search_key:str, label:str , key_list:list) -> Observable:
-    key = ''
-    for string in key_list:
-        if re.search(f'{search_key}(?!.*_isvalid)', string) is not None:
-            key = string
-            print("found key: ", key)
-            break
-    
-    if key == '':
-        raise ValueError(f"no key found for '{search_key}'")
-    
-    dimension = ""
-    if re.search('Pole_Mass', key) is not None:
-        dimension = "mass [GeV]"
-
-    return Observable(search_key, label, key, dimension)
-
-
-
-
-def print_scan_info(scan:Scan) -> None:
-    print(f"\n\n++++++++    {scan.name} SCAN    ++++++++\n")
-    print("     Keys: ", scan.num_keys)
-    print("     Points: ", scan.num_points)
-    print("     valid Points: ", scan.num_valid_points)
-    print("\n\n")
-
-
-
-def test():
-    scan, scan_data = load_hdf5("runs/MSSM_diver/samples/DIVER.hdf5")
-    scan = create_Scan_object(scan, scan_data)
-    print_scan_info(scan)
-
-
-if __name__ == '__main__':
-    test()
+    return [(scan_name, scan)]
