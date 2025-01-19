@@ -70,20 +70,20 @@ def get_dimension(observable_key:str) -> str:
 
 
 # create plots
-def scatter_2d(scan_list:list[tuple], observable_list:list[str]) -> None:
+def scatter_2d(scan_list:list[tuple], observable_list:list[str], keys:list[str], dimensions:list[str]) -> None:
     """
     create a 2D scatter plot of two observables
 
     parameters:
         scan_list: list of scans
         observable_list: list of observables to plot. length must be even
+        keys: list of keys of the observables
+        dimensions: list of dimensions of the observables
 
     returns:
         None
     """
-    keys = [search_observable(scan_list[0], observable) for observable in observable_list]
-    dimensions = [get_dimension(key) for key in keys]
-
+    
     # start 2D scatter plot
     for scan in scan_list:
         fig = plt.figure(figsize=(6, 6))
@@ -104,60 +104,76 @@ def scatter_2d(scan_list:list[tuple], observable_list:list[str]) -> None:
     return
 
 
-def plot_plr(scan_list:list[tuple], observable_list:list[str]) -> None:
+def plot_plr(scan_list:list[tuple], observable_list:list[str], keys:list[str], dimensions:list[str]) -> None:
     """
     create a 2D scatter plot of two observables
 
     parameters:
         scan_list: list of scans
         observable_list: list of observables to plot. length must be even
+        keys: list of keys of the observables
+        dimensions: list of dimensions of the observables
 
     returns:
         None
     """
-    keys = [search_observable(scan_list[0], observable) for observable in observable_list]
-    dimensions = [get_dimension(key) for key in keys]
 
     # start profile likelihood ratio plot
     for id_obs, obs in enumerate(observable_list):
         fig = plt.figure(figsize=(6, 6))
         ax = fig.add_subplot(111)
+        labels = []
         for id_scan, scan in enumerate(scan_list):
             ax.scatter(scan[1][keys[id_obs]], scan[1]['plr'], c=COLORS[id_scan], alpha=0.5)
+            labels.append(scan[0] + ": $\\mathcal{L}_{max} = $" + str(scan[1][keys[id_obs]][scan[1]['plr'].idxmax()].round(2)))
         ax.set_xlabel(f"{obs} {dimensions[id_obs]}")
         ax.set_ylabel("Profile Likelihood Ratio $\\mathcal{L}$")
+        ax.legend(labels)
         
 
         fig.tight_layout()
         #plt.show()
         fig.savefig(f"../plots/plr_plot_{obs}.png")
 
-        # TODO: add labels
+        
         # TODO: pull key finding out of functions
         return
     
 
 
-def hist_1d(scan_list:list[tuple], observable_list:list[str]):
-    keys = [search_observable(scan_list[0], observable) for observable in observable_list]
-    dimensions = [get_dimension(key) for key in keys]
+def hist_1d(scan_list:list[tuple], observable_list:list[str], keys:list[str], dimensions:list[str]) -> None:
 
-    # calculate bins
     for id_obs, obs in enumerate(observable_list):
+        # calculate bins
         n_bins = 20
         bin_range = abs(scan_list[0][1][keys[id_obs]].max() - scan_list[0][1][keys[id_obs]].min())
         step_size = bin_range // n_bins
         bins = np.arange(scan_list[0][1][keys[id_obs]].min(), scan_list[0][1][keys[id_obs]].max(), step_size)
-        print("calculated bins: ", bin_range, step_size, bins)
 
         # start 1D histogram plot
+        labels = []
         counts = [] 
         fig = plt.figure(figsize=(6, 6))
-        ax = fig.add_subplot(211)
+        gs = fig.add_gridspec(2, 1, height_ratios=(3,1), hspace=0)
+        ax = fig.add_subplot(gs[0])
         for id_scan, scan in enumerate(scan_list):
-            count, _, _ = ax.hist(scan[1][keys[id_obs]], bins=bins, alpha=0.5, color=COLORS[id_scan+1])
+            count, _, _ = ax.hist(scan[1][keys[id_obs]], bins=bins, density=True, alpha=0.5, color=COLORS[id_scan+1])
             counts.append(count)
+            labels.append(scan[0] + ": $\\mathcal{L}_{max} = $" + str(scan[1][keys[id_obs]][scan[1]['plr'].idxmax()].round(2)))
         ax.set_ylabel("Counts")
+        ax.legend(labels)
+        ax.set_xticks([])
+
+        # calculate count ratio
+        ax_ratio = fig.add_subplot(gs[1])
+        ratio = counts[1] / counts[0]
+        xaxis = [bins[i]+0.5*step_size for i in range(len(bins)-1)]
+        ax_ratio.scatter(xaxis, ratio, color='black', alpha=0.5, marker='.')
+        ax_ratio.set_xlabel(f"{obs} {dimensions[id_obs]}")
+        ax_ratio.set_ylabel("Ratio")
+        ax_ratio.legend([scan_list[1][0] + " / " + scan_list[0][0]])
+        ax_ratio.grid(linestyle='--', color='grey', alpha=0.5)
+        ax_ratio.set_ylim(-0.5, ax_ratio.get_ylim()[1] + 0.5)
 
 
 
@@ -171,6 +187,8 @@ def hist_1d(scan_list:list[tuple], observable_list:list[str]):
 if __name__ == "__main__":
 
     scan_list = util.load_hdf5_file(path_to_runs)
-    scatter_2d(scan_list, observable_list)
-    plot_plr(scan_list, observable_list)
-    hist_1d(scan_list, observable_list)
+    keys = [search_observable(scan_list[0], observable) for observable in observable_list]
+    dimensions = [get_dimension(key) for key in keys]
+    scatter_2d(scan_list, observable_list, keys, dimensions)
+    plot_plr(scan_list, observable_list, keys, dimensions)
+    hist_1d(scan_list, observable_list, keys, dimensions)
