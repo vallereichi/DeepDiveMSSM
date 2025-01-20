@@ -19,6 +19,10 @@ def scan_info(scan:Scan) -> None:
     print("\n\n")
 
 
+def print_keys(scan:Scan) -> None:
+    print("\nKey List:")
+    for key in scan.keys():
+        print("Key: ", key)
 
 
 
@@ -26,6 +30,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Print out information about a scan.')
     parser.add_argument('-p', '--path', type=str, nargs='*', help='path(s) to the hdf5 file(s) or directory containing hdf5 files')
+    parser.add_argument('-k', '--keys', action='store_true', help='print the keys of the input scan')
     args = parser.parse_args()
 
     if args.path is not None:
@@ -45,5 +50,11 @@ if __name__ == "__main__":
         print("No path specified. Loading all scans from the runs directory.")
         scan_list = load_hdf5_file("../runs")
 
+    
+    if args.keys:
+        for scan in scan_list:
+            print_keys(scan)
+
     for scan in scan_list:
         scan_info(scan)
+        
