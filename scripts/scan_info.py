@@ -1,9 +1,9 @@
 import pandas as pd
 import argparse
-import util
 import os
+from util import Scan, load_hdf5_file
 
-def scan_info(scan:tuple) -> None:
+def scan_info(scan:Scan) -> None:
     """
     print out information about a scan
 
@@ -13,9 +13,9 @@ def scan_info(scan:tuple) -> None:
     returns:
         None
     """
-    print(f"\n\n++++++++    {scan[0]} SCAN    ++++++++\n")
-    print("    number of keys:          ", len(scan[1].keys()))
-    print("    number of valid points:  ", scan[1].shape[0])
+    print(f"\n\n++++++++    {scan.name} SCAN    ++++++++\n")
+    print("    number of keys:          ", len(scan.keys()))
+    print("    number of valid points:  ", scan.shape[0])
     print("\n\n")
 
 
@@ -37,13 +37,13 @@ if __name__ == "__main__":
                 raise ValueError(f"Path {path} does not exist.")
             
             if os.path.isdir(path):
-                scan_list = util.load_hdf5_file(path)
+                scan_list = load_hdf5_file(path)
             else:
-                scan_list.append(util.load_hdf5_file(path)[0])
+                scan_list.append(load_hdf5_file(path)[0])
         
     else:
         print("No path specified. Loading all scans from the runs directory.")
-        scan_list = util.load_hdf5_file("../runs")
+        scan_list = load_hdf5_file("../runs")
 
     for scan in scan_list:
         scan_info(scan)

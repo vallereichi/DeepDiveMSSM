@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-import util
+from util import load_hdf5_file, Scan
 from scan_info import scan_info
 
 """
@@ -27,7 +27,7 @@ observable_list = ["h0_1", "h0_2"]
 """
 function declarations
 """
-def search_observable(scan:pd.DataFrame, search:str) -> str:
+def search_observable(scan:Scan, search:str) -> str:
     """
     Find a search string in a pandas dataframe and return the key of the column.
 
@@ -39,7 +39,7 @@ def search_observable(scan:pd.DataFrame, search:str) -> str:
         key of the column as string
     """
     key = ''
-    for string in scan_list[0][1].keys():
+    for string in scan.keys():
         if re.search(f'{search}(?!.*_isvalid)', string) is not None:
             key = string
             print("Key found: ", key)
@@ -70,12 +70,12 @@ def get_dimension(observable_key:str) -> str:
 
 
 # create plots
-def scatter_2d(scan_list:list[tuple], observable_list:list[str], keys:list[str], dimensions:list[str]) -> None:
+def scatter_2d(scan_list:list[Scan], observable_list:list[str], keys:list[str], dimensions:list[str]) -> None:
     """
     create a 2D scatter plot of two observables
 
     parameters:
-        scan_list: list of scans
+        scan_list: list of Scan objects
         observable_list: list of observables to plot. length must be even
         keys: list of keys of the observables
         dimensions: list of dimensions of the observables
@@ -88,14 +88,14 @@ def scatter_2d(scan_list:list[tuple], observable_list:list[str], keys:list[str],
     for scan in scan_list:
         fig = plt.figure(figsize=(6, 6))
         ax = fig.add_subplot(111)
-        ax.scatter(scan[1][keys[0]], scan[1][keys[1]], c=scan[1]['plr'], cmap='viridis', s=10)
+        ax.scatter(scan[keys[0]], scan[keys[1]], c=scan['plr'], cmap='viridis', s=10)
         ax.set_xlabel(f"{observable_list[0]} {dimensions[0]}")
         ax.set_ylabel(f"{observable_list[1]} {dimensions[1]}")
-        ax.set_title(scan[0])
+        ax.set_title(scan.name)
 
         fig.tight_layout()
         #plt.show()
-        fig.savefig(f"../plots/2D_scatter_plot_{observable_list[0]}_{observable_list[1]}_{scan[0]}.png")
+        fig.savefig(f"../plots/2D_scatter_plot_{observable_list[0]}_{observable_list[1]}_{scan.name}.png")
 
         # TODO: add better colomap
         # TODO: maybe create Observable class to handle the keys and dimensions
@@ -104,12 +104,12 @@ def scatter_2d(scan_list:list[tuple], observable_list:list[str], keys:list[str],
     return
 
 
-def plot_plr(scan_list:list[tuple], observable_list:list[str], keys:list[str], dimensions:list[str]) -> None:
+def plot_plr(scan_list:list[Scan], observable_list:list[str], keys:list[str], dimensions:list[str]) -> None:
     """
     create a 2D scatter plot of two observables
 
     parameters:
-        scan_list: list of scans
+        scan_list: list of Scan objects
         observable_list: list of observables to plot. length must be even
         keys: list of keys of the observables
         dimensions: list of dimensions of the observables
@@ -124,8 +124,8 @@ def plot_plr(scan_list:list[tuple], observable_list:list[str], keys:list[str], d
         ax = fig.add_subplot(111)
         labels = []
         for id_scan, scan in enumerate(scan_list):
-            ax.scatter(scan[1][keys[id_obs]], scan[1]['plr'], c=COLORS[id_scan], alpha=0.5)
-            labels.append(scan[0] + ": $\\mathcal{L}_{max} = $" + str(scan[1][keys[id_obs]][scan[1]['plr'].idxmax()].round(2)))
+            ax.scatter(scan[keys[id_obs]], scan['plr'], c=COLORS[id_scan], alpha=0.5)
+            labels.append(scan.name + ": $\\mathcal{L}_{max} = $" + str(scan[keys[id_obs]][scan['plr'].idxmax()].round(2)))
         ax.set_xlabel(f"{obs} {dimensions[id_obs]}")
         ax.set_ylabel("Profile Likelihood Ratio $\\mathcal{L}$")
         ax.legend(labels)
@@ -136,19 +136,18 @@ def plot_plr(scan_list:list[tuple], observable_list:list[str], keys:list[str], d
         fig.savefig(f"../plots/plr_plot_{obs}.png")
 
         
-        # TODO: pull key finding out of functions
-        return
+    return
     
 
 
-def hist_1d(scan_list:list[tuple], observable_list:list[str], keys:list[str], dimensions:list[str]) -> None:
+def hist_1d(scan_list:list[Scan], observable_list:list[str], keys:list[str], dimensions:list[str]) -> None:
 
     for id_obs, obs in enumerate(observable_list):
         # calculate bins
         n_bins = 20
-        bin_range = abs(scan_list[0][1][keys[id_obs]].max() - scan_list[0][1][keys[id_obs]].min())
+        bin_range = abs(scan_list[0][keys[id_obs]].max() - scan_list[0][keys[id_obs]].min())
         step_size = bin_range // n_bins
-        bins = np.arange(scan_list[0][1][keys[id_obs]].min(), scan_list[0][1][keys[id_obs]].max(), step_size)
+        bins = np.arange(scan_list[0][keys[id_obs]].min(), scan_list[0][keys[id_obs]].max(), step_size)
 
         # start 1D histogram plot
         labels = []
@@ -157,9 +156,9 @@ def hist_1d(scan_list:list[tuple], observable_list:list[str], keys:list[str], di
         gs = fig.add_gridspec(2, 1, height_ratios=(3,1), hspace=0)
         ax = fig.add_subplot(gs[0])
         for id_scan, scan in enumerate(scan_list):
-            count, _, _ = ax.hist(scan[1][keys[id_obs]], bins=bins, density=True, alpha=0.5, color=COLORS[id_scan+1])
+            count, _, _ = ax.hist(scan[keys[id_obs]], bins=bins, density=True, alpha=0.5, color=COLORS[id_scan+1])
             counts.append(count)
-            labels.append(scan[0] + ": $\\mathcal{L}_{max} = $" + str(scan[1][keys[id_obs]][scan[1]['plr'].idxmax()].round(2)))
+            labels.append(scan.name + ": $\\mathcal{L}_{max} = $" + str(scan[keys[id_obs]][scan['plr'].idxmax()].round(2)))
         ax.set_ylabel("Counts")
         ax.legend(labels)
         ax.set_xticks([])
@@ -171,7 +170,7 @@ def hist_1d(scan_list:list[tuple], observable_list:list[str], keys:list[str], di
         ax_ratio.scatter(xaxis, ratio, color='black', alpha=0.5, marker='.')
         ax_ratio.set_xlabel(f"{obs} {dimensions[id_obs]}")
         ax_ratio.set_ylabel("Ratio")
-        ax_ratio.legend([scan_list[1][0] + " / " + scan_list[0][0]])
+        ax_ratio.legend([scan_list[1].name + " / " + scan_list[0].name])
         ax_ratio.grid(linestyle='--', color='grey', alpha=0.5)
         ax_ratio.set_ylim(-0.5, ax_ratio.get_ylim()[1] + 0.5)
 
@@ -186,7 +185,7 @@ def hist_1d(scan_list:list[tuple], observable_list:list[str], keys:list[str], di
 # Entry point
 if __name__ == "__main__":
 
-    scan_list = util.load_hdf5_file(path_to_runs)
+    scan_list = load_hdf5_file(path_to_runs)
     keys = [search_observable(scan_list[0], observable) for observable in observable_list]
     dimensions = [get_dimension(key) for key in keys]
     scatter_2d(scan_list, observable_list, keys, dimensions)

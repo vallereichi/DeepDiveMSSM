@@ -4,6 +4,20 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
+"""
+declare classes
+"""
+class Scan(pd.DataFrame):
+    def __init__(self, name:str, data:dict):
+        super().__init__(data)
+        self.name = name
+        
+
+
+
+"""
+declare helper functions
+"""
 def load_hdf5_file(path:str) -> list:
     """
     load a hdf5 file and return a list of pandas dataframes with a name associated to the file.
@@ -32,14 +46,17 @@ def load_hdf5_file(path:str) -> list:
     dataframe = {}
     for key in dataset.keys():
         dataframe[key] = dataset[key][:]
-    scan = pd.DataFrame(dataframe)
+    df = pd.DataFrame(dataframe)
     scan_name = os.path.splitext(os.path.basename(path))[0]
     print("File loaded: ", scan_name, "; ", path)
 
     # choose only valid points
-    scan = scan[ scan['LogLike_isvalid'] == 1 ]
+    df = df[ df['LogLike_isvalid'] == 1 ]
 
     # calculate profile likelihood ratio
-    scan['plr'] = np.exp(scan['LogLike'] - scan['LogLike'].max())
+    df['plr'] = np.exp(df['LogLike'] - df['LogLike'].max())
 
-    return [(scan_name, scan)]
+    # create scan object
+    scan = Scan(scan_name, df)
+
+    return [scan]
