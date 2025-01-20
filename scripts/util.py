@@ -7,13 +7,24 @@ from pathlib import Path
 """
 declare classes
 """
+
+
 class Scan(pd.DataFrame):
     def __init__(self, name:str, data:dict):
         super().__init__(data)
         self.name = name
         
+class Observable:
+    def __init__(self, search_key:str, key:str, unit:str, label:str = None):
+        self.search_key = search_key
+        self.key = key
+        self.unit = unit
 
+        if label is None:
+            self.label = search_key
 
+    def __repr__(self):
+        return f"Observable: {self.search_key} -> {self.key} ({self.unit})"
 
 """
 declare helper functions

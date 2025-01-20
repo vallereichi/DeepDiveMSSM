@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from util import load_hdf5_file, Scan
+from util import load_hdf5_file, Scan, Observable
 from scan_info import scan_info
 
 """
@@ -70,16 +70,14 @@ def get_dimension(observable_key:str) -> str:
 
 
 # create plots
-def scatter_2d(scan_list:list[Scan], observable_list:list[str], keys:list[str], dimensions:list[str]) -> None:
+def scatter_2d(scan_list:list[Scan], observable_list:list[Observable]) -> None:
     """
     create a 2D scatter plot of two observables
 
     parameters:
         scan_list: list of Scan objects
         observable_list: list of observables to plot. length must be even
-        keys: list of keys of the observables
-        dimensions: list of dimensions of the observables
-
+        
     returns:
         None
     """
@@ -88,66 +86,74 @@ def scatter_2d(scan_list:list[Scan], observable_list:list[str], keys:list[str], 
     for scan in scan_list:
         fig = plt.figure(figsize=(6, 6))
         ax = fig.add_subplot(111)
-        ax.scatter(scan[keys[0]], scan[keys[1]], c=scan['plr'], cmap='viridis', s=10)
-        ax.set_xlabel(f"{observable_list[0]} {dimensions[0]}")
-        ax.set_ylabel(f"{observable_list[1]} {dimensions[1]}")
+        ax.scatter(scan[observable_list[0].key], scan[observable_list[1].key], c=scan['plr'], cmap='viridis', s=10)
+        ax.set_xlabel(f"{observable_list[0].label} {observable_list[0].unit}")
+        ax.set_ylabel(f"{observable_list[1].label} {observable_list[1].unit}")
         ax.set_title(scan.name)
 
         fig.tight_layout()
         #plt.show()
-        fig.savefig(f"../plots/2D_scatter_plot_{observable_list[0]}_{observable_list[1]}_{scan.name}.png")
+        fig.savefig(f"../plots/2D_scatter_plot_{observable_list[0].label}_{observable_list[1].label}_{scan.name}.png", dpi=1000)
 
         # TODO: add better colomap
-        # TODO: maybe create Observable class to handle the keys and dimensions
+        
         # TODO: add capability to handle more than two observables
 
     return
 
 
-def plot_plr(scan_list:list[Scan], observable_list:list[str], keys:list[str], dimensions:list[str]) -> None:
+def plot_plr(scan_list:list[Scan], observable_list:list[Observable]) -> None:
     """
     create a 2D scatter plot of two observables
 
     parameters:
         scan_list: list of Scan objects
         observable_list: list of observables to plot. length must be even
-        keys: list of keys of the observables
-        dimensions: list of dimensions of the observables
-
+        
     returns:
         None
     """
 
     # start profile likelihood ratio plot
-    for id_obs, obs in enumerate(observable_list):
+    for obs in observable_list:
         fig = plt.figure(figsize=(6, 6))
         ax = fig.add_subplot(111)
         labels = []
-        for id_scan, scan in enumerate(scan_list):
-            ax.scatter(scan[keys[id_obs]], scan['plr'], c=COLORS[id_scan], alpha=0.5)
-            labels.append(scan.name + ": $\\mathcal{L}_{max} = $" + str(scan[keys[id_obs]][scan['plr'].idxmax()].round(2)))
-        ax.set_xlabel(f"{obs} {dimensions[id_obs]}")
+        for id, scan in enumerate(scan_list):
+            ax.scatter(scan[obs.key], scan['plr'], c=COLORS[id], alpha=0.5)
+            labels.append(scan.name + ": $\\mathcal{L}_{max} = $" + str(scan[obs.key][scan['plr'].idxmax()].round(2)))
+        ax.set_xlabel(f"{obs.label} {obs.unit}")
         ax.set_ylabel("Profile Likelihood Ratio $\\mathcal{L}$")
         ax.legend(labels)
         
 
         fig.tight_layout()
         #plt.show()
-        fig.savefig(f"../plots/plr_plot_{obs}.png")
+        fig.savefig(f"../plots/plr_plot_{obs.label}.png", dpi=1000)
 
         
     return
     
 
 
-def hist_1d(scan_list:list[Scan], observable_list:list[str], keys:list[str], dimensions:list[str]) -> None:
+def hist_1d(scan_list:list[Scan], observable_list:list[Observable]) -> None:
+    """
+    create a 1D histogram plot of an observable. Provide more than one scan to compare them.
 
-    for id_obs, obs in enumerate(observable_list):
+    parameters:
+        scan_list: list of Scan objects
+        observable_list: list of observables to plot
+
+    returns:
+        None
+    """
+
+    for obs in observable_list:
         # calculate bins
         n_bins = 20
-        bin_range = abs(scan_list[0][keys[id_obs]].max() - scan_list[0][keys[id_obs]].min())
+        bin_range = abs(scan_list[0][obs.key].max() - scan_list[0][obs.key].min())
         step_size = bin_range // n_bins
-        bins = np.arange(scan_list[0][keys[id_obs]].min(), scan_list[0][keys[id_obs]].max(), step_size)
+        bins = np.arange(scan_list[0][obs.key].min(), scan_list[0][obs.key].max(), step_size)
 
         # start 1D histogram plot
         labels = []
@@ -156,9 +162,9 @@ def hist_1d(scan_list:list[Scan], observable_list:list[str], keys:list[str], dim
         gs = fig.add_gridspec(2, 1, height_ratios=(3,1), hspace=0)
         ax = fig.add_subplot(gs[0])
         for id_scan, scan in enumerate(scan_list):
-            count, _, _ = ax.hist(scan[keys[id_obs]], bins=bins, density=True, alpha=0.5, color=COLORS[id_scan+1])
+            count, _, _ = ax.hist(scan[obs.key], bins=bins, density=True, alpha=0.5, color=COLORS[id_scan+1])
             counts.append(count)
-            labels.append(scan.name + ": $\\mathcal{L}_{max} = $" + str(scan[keys[id_obs]][scan['plr'].idxmax()].round(2)))
+            labels.append(scan.name + ": $\\mathcal{L}_{max} = $" + str(scan[obs.key][scan['plr'].idxmax()].round(2)))
         ax.set_ylabel("Counts")
         ax.legend(labels)
         ax.set_xticks([])
@@ -168,7 +174,7 @@ def hist_1d(scan_list:list[Scan], observable_list:list[str], keys:list[str], dim
         ratio = counts[1] / counts[0]
         xaxis = [bins[i]+0.5*step_size for i in range(len(bins)-1)]
         ax_ratio.scatter(xaxis, ratio, color='black', alpha=0.5, marker='.')
-        ax_ratio.set_xlabel(f"{obs} {dimensions[id_obs]}")
+        ax_ratio.set_xlabel(f"{obs.label} {obs.unit}")
         ax_ratio.set_ylabel("Ratio")
         ax_ratio.legend([scan_list[1].name + " / " + scan_list[0].name])
         ax_ratio.grid(linestyle='--', color='grey', alpha=0.5)
@@ -178,7 +184,7 @@ def hist_1d(scan_list:list[Scan], observable_list:list[str], keys:list[str], dim
 
         fig.tight_layout()
         #plt.show()
-        fig.savefig(f"../plots/hist_plot_{obs}.png")
+        fig.savefig(f"../plots/hist_plot_{obs.label}.png", dpi=1000)
 
 
 
@@ -188,6 +194,10 @@ if __name__ == "__main__":
     scan_list = load_hdf5_file(path_to_runs)
     keys = [search_observable(scan_list[0], observable) for observable in observable_list]
     dimensions = [get_dimension(key) for key in keys]
-    scatter_2d(scan_list, observable_list, keys, dimensions)
-    plot_plr(scan_list, observable_list, keys, dimensions)
-    hist_1d(scan_list, observable_list, keys, dimensions)
+    observable_list = [Observable(observable, key, dim) for observable, key, dim in zip(observable_list, keys, dimensions)]
+    
+    for obs in observable_list:
+        print(obs)
+    scatter_2d(scan_list, observable_list)
+    plot_plr(scan_list, observable_list)
+    hist_1d(scan_list, observable_list)
