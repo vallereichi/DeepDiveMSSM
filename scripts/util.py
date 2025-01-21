@@ -1,78 +1,81 @@
-import re
 import os
 import h5py
 import pandas as pd
 import numpy as np
-from classes import Scan, Observable
+from pathlib import Path
 
 """
-load files
+declare classes
 """
-def load_hdf5(path:str) -> tuple[str, pd.DataFrame]:
-    data ={}
-
-    with h5py.File(path, 'r') as hdf5:
-        for group in hdf5.keys():
-            if group != "metadata":
-                for key in hdf5[group].keys():
-                    data[key] = hdf5[group][key][:]
-
-    data = pd.DataFrame(data)
-    name = os.path.splitext(os.path.basename(path))[0]
-
-    print("file loaded: ", path)
-
-    return name, data
 
 
-def create_Scan_object(name:str, data:pd.DataFrame) -> Scan:
-    num_keys = data.shape[1]
-    num_points = data.shape[0]
+class Scan(pd.DataFrame):
+    def __init__(self, name:str, data:dict):
+        super().__init__(data)
+        self.name = name
+        
+class Observable:
+    def __init__(self, search_key:str, key:str, unit:str, label:str = None):
+        self.search_key = search_key
+        self.key = key
+        self.unit = unit
 
-    valid_logs = data[data['LogLike_isvalid'] == 1]
-    num_valid_points = valid_logs.shape[0]
+        if label is None:
+            self.label = search_key
 
-    plr = np.exp(valid_logs['LogLike'] - valid_logs['LogLike'].max())
+    def __repr__(self):
+        return f"Observable: {self.search_key} -> {self.key} ({self.unit})"
 
-    return Scan(name, valid_logs, plr, num_keys, num_points, num_valid_points)
+"""
+declare helper functions
+"""
+def load_hdf5_file(path:str) -> list[Scan]:
+    """
+    load a hdf5 file and return a list of pandas dataframes with a name associated to the file.
+    Each dataframe only contains valid points and a column with the profile likelihood ratio is added.
 
+    parameters:
+        path: pass a path to a hdf5 file or a directory containing hdf5 files
 
+    returns:
+        list of tuples with the name of the scan and the pandas dataframe
+    """
 
+    if os.path.isdir(path):
+        scans = []
+        hdf5_paths = [p for p in Path(path).rglob('*.hdf5')]
+        for file in hdf5_paths:
+            scans.append(load_hdf5_file(file)[0])
+        return scans
 
-def create_Observable_object(search_key:str, label:str , key_list:list) -> Observable:
-    key = ''
-    for string in key_list:
-        if re.search(f'{search_key}(?!.*_isvalid)', string) is not None:
-            key = string
-            print("found key: ", key)
-            break
-    
-    if key == '':
-        raise ValueError(f"no key found for '{search_key}'")
-    
-    dimension = ""
-    if re.search('Pole_Mass', key) is not None:
-        dimension = "mass [GeV]"
+    # load hdf5 files
+    hdf5 = h5py.File(path, 'r')
+    group_key = [key for key in list(hdf5.keys()) if key != 'metadata'][0]
+    dataset = hdf5[group_key]
 
-    return Observable(search_key, label, key, dimension)
+    # create pandas dataframe
+    dataframe = {}
+    for key in dataset.keys():
+        dataframe[key] = dataset[key][:]
+    df = pd.DataFrame(dataframe)
+    scan_name = os.path.splitext(os.path.basename(path))[0]
+    print("File loaded: ", scan_name, "; ", path)
 
+    # choose only valid points
+    df = df[ df['LogLike_isvalid'] == 1 ]
 
+    # calculate profile likelihood ratio
+    df['plr'] = np.exp(df['LogLike'] - df['LogLike'].max())
 
+    # create scan object
+    scan = Scan(scan_name, df)
 
-def print_scan_info(scan:Scan) -> None:
-    print(f"\n\n++++++++    {scan.name} SCAN    ++++++++\n")
-    print("     Keys: ", scan.num_keys)
-    print("     Points: ", scan.num_points)
-    print("     valid Points: ", scan.num_valid_points)
-    print("\n\n")
+    return [scan]
 
+def load_csv_file(path:str) -> list[Scan]:
+    df = pd.read_csv(path)
+    scan_name = os.path.splitext(os.path.basename(path))[0]
+    print("File loaded: ", scan_name, "; ", path)
+    scan = Scan(scan_name, df)
 
-
-def test():
-    scan, scan_data = load_hdf5("runs/MSSM_diver/samples/DIVER.hdf5")
-    scan = create_Scan_object(scan, scan_data)
-    print_scan_info(scan)
-
-
-if __name__ == '__main__':
-    test()
+    return [scan]
