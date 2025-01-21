@@ -1,7 +1,7 @@
 import pandas as pd
 import argparse
 import os
-from util import Scan, load_hdf5_file
+from util import Scan, load_hdf5_file, load_csv_file
 
 def scan_info(scan:Scan) -> None:
     """
@@ -36,6 +36,7 @@ if __name__ == "__main__":
     if args.path is not None:
         print("Loading scans from the specified path(s).")
         scan_list = []
+        _, suffix = os.path.splitext(args.path[0]) 
 
         for path in args.path:
             if not os.path.exists(path):
@@ -43,12 +44,14 @@ if __name__ == "__main__":
             
             if os.path.isdir(path):
                 scan_list = load_hdf5_file(path)
-            else:
+            elif suffix == ".hdf5":
                 scan_list.append(load_hdf5_file(path)[0])
+            elif suffix == ".csv":
+                scan_list.append(load_csv_file(path)[0])
         
     else:
         print("No path specified. Loading all scans from the runs directory.")
-        scan_list = load_hdf5_file("../runs")
+        scan_list = load_hdf5_file("../version1/runs")
 
     
     if args.keys:
@@ -58,3 +61,4 @@ if __name__ == "__main__":
     for scan in scan_list:
         scan_info(scan)
         
+    print(scan_list[0].head())

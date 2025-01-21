@@ -29,7 +29,7 @@ class Observable:
 """
 declare helper functions
 """
-def load_hdf5_file(path:str) -> list:
+def load_hdf5_file(path:str) -> list[Scan]:
     """
     load a hdf5 file and return a list of pandas dataframes with a name associated to the file.
     Each dataframe only contains valid points and a column with the profile likelihood ratio is added.
@@ -68,6 +68,14 @@ def load_hdf5_file(path:str) -> list:
     df['plr'] = np.exp(df['LogLike'] - df['LogLike'].max())
 
     # create scan object
+    scan = Scan(scan_name, df)
+
+    return [scan]
+
+def load_csv_file(path:str) -> list[Scan]:
+    df = pd.read_csv(path)
+    scan_name = os.path.splitext(os.path.basename(path))[0]
+    print("File loaded: ", scan_name, "; ", path)
     scan = Scan(scan_name, df)
 
     return [scan]
