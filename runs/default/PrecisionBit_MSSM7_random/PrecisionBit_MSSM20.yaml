@@ -1,0 +1,139 @@
+Parameters:
+  StandardModel_SLHA2:
+    alphainv: 1.27950000E+02
+    GF: 1.16637870E-05
+    alphaS: 1.18100000E-01
+    mZ: 9.11876000E+01
+    mBmB: 4.18000000E+00
+    mT: 1.73340000E+02
+    mTau: 1.77686000E+00
+    mNu3: 0
+    mE: 5.10998946E-04
+    mNu1: 0
+    mMu: 1.05658375E-01
+    mNu2: 0
+    mD: 4.70000000E-03
+    mU: 2.20000000E-03
+    mS: 9.60000000E-02
+    mCmC: 1.28000000E+00
+    CKM_lambda: 0.22537
+    CKM_A: 0.814
+    CKM_rhobar: 0.117
+    CKM_etabar: 0.353
+    theta12: 0.58376
+    theta23: 0.76958
+    theta13: 0.15495
+    delta13: 0
+    alpha1: 0
+    alpha2: 0
+  MSSM7atQ:
+    Qin:
+      fixed_value: 1000.0
+    SignMu:
+      fixed_value: 1
+    Ad_3:
+      prior_type: double_log_flat_join
+      ranges: [-1e4, -1e2, 1e2, 1e4]
+    Au_3:
+      prior_type: double_log_flat_join
+      ranges: [-1e4, -1e2, 1e2, 1e4]
+    M2:
+      prior_type: double_log_flat_join
+      ranges: [-1e4, -1e2, 1e2, 1e4]
+    TanBeta:
+      range: [3.0, 70.0]
+      prior_type: flat
+    mHd2:
+      prior_type: double_log_flat_join
+      ranges: [-1e8, -1e4, 1e4, 1e8]
+    mHu2:
+      prior_type: double_log_flat_join
+      ranges: [-1e8, -1e4, 1e4, 1e8]
+    mf2:
+      prior_type: double_log_flat_join
+      ranges: [0, 0, 1e4, 1e8]
+Priors: ~
+Scanner:
+  use_scanner: random
+  scanners:
+    random:
+      plugin: random
+      point_number: 10
+      like: LogLike
+  default_output_path: runs/PrecisionBit_MSSM7_random/scanner_plugins/
+ObsLikes:
+  - purpose: LogLike
+    capability: lnL_Z_mass
+  - purpose: LogLike
+    capability: lnL_t_mass
+  - purpose: LogLike
+    capability: lnL_mcmc
+  - purpose: LogLike
+    capability: lnL_mbmb
+  - purpose: LogLike
+    capability: lnL_alpha_em
+  - purpose: LogLike
+    capability: lnL_alpha_s
+  - purpose: LogLike
+    capability: lnL_W_mass
+  - purpose: LogLike
+    capability: lnL_sinW2_eff
+  - purpose: LogLike
+    capability: lnL_deltarho
+  - purpose: LogLike
+    capability: lnL_gm2
+  - purpose: Observable
+    capability: muon_gm2
+    function: GM2C_SUSY
+  - purpose: Observable
+    capability: deltarho
+  - purpose: Observable
+    capability: mw
+    function: mw_from_MSSM_spectrum
+  - purpose: Observable
+    capability: prec_sinW2_eff
+  - purpose: Observable
+    capability: edm_e
+  - purpose: Observable
+    capability: edm_n
+Rules:
+  - capability: unimproved_MSSM_spectrum
+    function: get_MSSMatQ_spectrum_FS
+  - capability: MSSM_spectrum
+    function: make_MSSM_precision_spectrum_H_W
+  - capability: prec_mh
+    function: FeynHiggs_HiggsMass
+  - capability: muon_gm2_SM
+    function: gm2_SM_ee
+  - capability: Higgs_decay_rates
+    function: FeynHiggs_MSSM_h0_1_decays
+  - capability: h0_2_decay_rates
+    function: FeynHiggs_h0_2_decays
+  - capability: A0_decay_rates
+    function: FeynHiggs_A0_decays
+  - capability: H_plus_decay_rates
+    function: FeynHiggs_H_plus_decays
+  - capability: decay_rates
+    function: all_decays
+  - capability: lnL_gm2
+    function: lnL_gm2
+    dependencies:
+      - capability: muon_gm2
+        function: GM2C_SUSY
+Printer:
+  printer: hdf5
+  options:
+    output_file: PrecisionBit_MSSM7_random.hdf5
+    group: /MSSM
+    default_output_path: runs/PrecisionBit_MSSM7_random/samples/
+Logger:
+  redirection:
+    [Default]: default.log
+  default_output_path: runs/PrecisionBit_MSSM7_random/logs/
+KeyValues:
+  dependency_resolution:
+    prefer_model_specific_functions: true
+  likelihood:
+    model_invalid_for_lnlike_below: -1e6
+  default_output_path: runs/PrecisionBit_MSSM7_random
+  debug: true

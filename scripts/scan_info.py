@@ -61,4 +61,4 @@ if __name__ == "__main__":
     for scan in scan_list:
         scan_info(scan)
         
-    print(scan_list[0].head())
+   

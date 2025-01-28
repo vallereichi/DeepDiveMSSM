@@ -1,0 +1,94 @@
+Parameters:
+
+  # SM parameters
+  StandardModel_SLHA2: !import include/StandardModel_SLHA2_scan.yaml
+
+  # SUSY parameters
+  MSSM7atQ:
+    Qin:
+      fixed_value: 1000.0
+    SignMu:
+      fixed_value: 1
+    Ad_3:
+      prior_type: double_log_flat_join
+      ranges: [-1e4, -1e2, 1e2, 1e4]
+    Au_3:
+      prior_type: double_log_flat_join
+      ranges: [-1e4, -1e2, 1e2, 1e4]
+    M2:
+      prior_type: double_log_flat_join
+      ranges: [-1e4, -1e2, 1e2, 1e4]
+    TanBeta:
+      range: [3.0, 70.0]
+      prior_type: flat
+    mHd2:
+      prior_type: double_log_flat_join
+      ranges: [-1e8, -1e4, 1e4, 1e8]
+    mHu2:
+      prior_type: double_log_flat_join
+      ranges: [-1e8, -1e4, 1e4, 1e8]
+    mf2:
+      prior_type: double_log_flat_join
+      ranges: [0, 0, 1e4, 1e8]
+
+Printer:
+  printer: hdf5
+  options:
+    output_file: "MSSM_SCANNER"
+    group: "/MSSM"
+    delete_file_on_restart: true
+
+Scanner:
+
+ use_scanner: multinest
+
+ scanners:
+   multinest:
+     plugin: multinest
+     like:  LogLike
+     nlive: 5000
+     tol: 0.1
+     updInt: 1
+
+   random:
+     plugin: random
+     point_number: 100
+     like:  LogLike
+     printme: false
+
+    de:
+      plugin: diver
+      like: LogLike
+      NP: 100
+      convthresh: 1e-3
+      verbosity: 3
+
+  default_output_path: runs/MSSM_SCANNER/scanner_plugins/
+
+ObsLikes:
+
+  # PrecisionBit
+  - purpose: LogLike
+    capability: lnL_t_mass
+  - purpose: LogLike
+    capability: lnL_alpha_s
+  - purpose: LogLike
+    capability: lnL_GF
+  - purpose: LogLike
+    capability: lnL_alpha_em
+  - purpose: LogLike
+    capability: lnL_t_mass
+  - purpose: LogLike
+    capability: lnL_Z_mass
+  
+
+Rules:
+
+  # SpecBit
+  - capability: MSSM_spectrum
+    type: Spectrum
+    function: make_MSSM_precision_spectrum_none
+  - capability: unimproved_MSSM_spectrum
+    function: get_MSSMatQ_spectrum
+  
+

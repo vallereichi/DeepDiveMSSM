@@ -11,14 +11,14 @@ from scan_info import scan_info
 """
 define defaults for testing 
 """
-path_to_runs = "../runs/version1"
+path_to_runs = "../runs/default/FlavBit_CMSSM/"
 path_to_diver_scan = "../runs/version1/MSSM_diver/samples/DIVER.hdf5"
 path_to_random_scan = "../runs/version1/MSSM_random/samples/RANDOM.hdf5"
 
 COLORS = ['coral', 'darkcyan', 'orchid', 'darkseagreen', 'goldenrod']
 
 observable_list = [
-    "h0_1",
+#    "h0_1",
     "A0",
 #    "chi0_1",
 #    "chi0_2",

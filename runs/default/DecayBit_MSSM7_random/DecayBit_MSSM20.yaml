@@ -1,0 +1,120 @@
+Parameters:
+  StandardModel_SLHA2:
+    alphainv: 1.27950000E+02
+    GF: 1.16637870E-05
+    alphaS: 1.18100000E-01
+    mZ: 9.11876000E+01
+    mBmB: 4.18000000E+00
+    mT: 1.73340000E+02
+    mTau: 1.77686000E+00
+    mNu3: 0
+    mE: 5.10998946E-04
+    mNu1: 0
+    mMu: 1.05658375E-01
+    mNu2: 0
+    mD: 4.70000000E-03
+    mU: 2.20000000E-03
+    mS: 9.60000000E-02
+    mCmC: 1.28000000E+00
+    CKM_lambda: 0.22537
+    CKM_A: 0.814
+    CKM_rhobar: 0.117
+    CKM_etabar: 0.353
+    theta12: 0.58376
+    theta23: 0.76958
+    theta13: 0.15495
+    delta13: 0
+    alpha1: 0
+    alpha2: 0
+  MSSM7atQ:
+    Qin:
+      fixed_value: 1000.0
+    SignMu:
+      fixed_value: 1
+    Ad_3:
+      prior_type: double_log_flat_join
+      ranges: [-1e4, -1e2, 1e2, 1e4]
+    Au_3:
+      prior_type: double_log_flat_join
+      ranges: [-1e4, -1e2, 1e2, 1e4]
+    M2:
+      prior_type: double_log_flat_join
+      ranges: [-1e4, -1e2, 1e2, 1e4]
+    TanBeta:
+      range: [3.0, 70.0]
+      prior_type: flat
+    mHd2:
+      prior_type: double_log_flat_join
+      ranges: [-1e8, -1e4, 1e4, 1e8]
+    mHu2:
+      prior_type: double_log_flat_join
+      ranges: [-1e8, -1e4, 1e4, 1e8]
+    mf2:
+      prior_type: double_log_flat_join
+      ranges: [0, 0, 1e4, 1e8]
+Priors: ~
+ObsLikes:
+  - purpose: Observable
+    capability: all_BFs
+    printme: true
+Rules:
+  - capability: unimproved_MSSM_spectrum
+    function: get_MSSMatQ_spectrum_FS
+  - capability: MSSM_spectrum
+    type: Spectrum
+    function: make_MSSM_precision_spectrum_none
+  - capability: all_BFs
+    function: get_decaytable_as_map
+    options:
+      printall: true
+  - capability: decay_rates
+    function: all_decays
+  - capability: Higgs_decay_rates
+    function: MSSM_h0_1_decays
+  - capability: h0_2_decay_rates
+    function: h0_2_decays
+  - capability: A0_decay_rates
+    function: A0_decays
+  - capability: H_plus_decay_rates
+    function: H_plus_decays
+  - capability: t_decay_rates
+    function: t_decays
+Printer:
+  printer: hdf5
+  options:
+    output_file: DecayBit_MSSM7_random.hdf5
+    group: /MSSM
+    default_output_path: runs/DecayBit_MSSM7_random//samples/
+Scanner:
+  use_scanner: random
+  scanners:
+    de:
+      plugin: diver
+      like: LogLike
+      NP: 100
+      convthresh: 1e-3
+      verbosity: 3
+    random:
+      plugin: random
+      point_number: 500
+      like: LogLike
+      printme: false
+  default_output_path: runs/DecayBit_MSSM7_random//scanner_plugins/
+Logger:
+  redirection:
+    [Debug]: debug.log
+    [Default]: default.log
+    [Error]: errors.log
+    [Warning]: warnings.log
+    [Core, Error]: core_errors.log
+    [Core, Error, Fatal]: fatal_core_errors.log
+    [Dependency Resolver]: dependency_resolver.log
+    [DecayBit]: DecayBit.log
+  default_output_path: runs/DecayBit_MSSM7_random//logs/
+KeyValues:
+  dependency_resolution:
+    prefer_model_specific_functions: true
+  likelihood:
+    model_invalid_for_lnlike_below: -1e6
+  default_output_path: runs/DecayBit_MSSM7_random/
+  debug: true
