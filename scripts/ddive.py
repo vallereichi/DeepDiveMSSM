@@ -1,6 +1,6 @@
 
 import re
-
+import argparse
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -11,14 +11,14 @@ from scan_info import scan_info
 """
 define defaults for testing 
 """
-path_to_runs = "../runs/default/FlavBit_CMSSM/"
+path_to_default = "../runs/version1/"
 path_to_diver_scan = "../runs/version1/MSSM_diver/samples/DIVER.hdf5"
 path_to_random_scan = "../runs/version1/MSSM_random/samples/RANDOM.hdf5"
 
 COLORS = ['coral', 'darkcyan', 'orchid', 'darkseagreen', 'goldenrod']
 
 observable_list = [
-#    "h0_1",
+    "h0_1",
     "A0",
 #    "chi0_1",
 #    "chi0_2",
@@ -32,9 +32,13 @@ observable_list = [
 #    "tanbeta",
 #    "Z0",
 #    ":W+",
-
     ]
-
+"""
+handle command line options
+"""
+parser = argparse.ArgumentParser()
+parser.add_argument('-p', '--path', nargs='*', help="path to scan file. Pass in either a directory or the file path directly")
+args = parser.parse_args()
 
 
 
@@ -184,15 +188,17 @@ def hist_1d(scan_list:list[Scan], observable_list:list[Observable]) -> None:
         if len(scan_list) == 2:
             gs = fig.add_gridspec(2, 1, height_ratios=(3,1), hspace=0)
             ax = fig.add_subplot(gs[0])
+            ax.set_xticks([])
         else:
             ax = fig.add_subplot(111)
+            ax.set_xlabel(f"{obs.label} {obs.unit}")
         for id_scan, scan in enumerate(scan_list):
             count, _, _ = ax.hist(scan[obs.key], bins=bins, density=True, alpha=0.5, color=COLORS[id_scan+1])
             counts.append(count)
             labels.append(scan.name + ": $\\mathcal{L}_{max} = $" + str(scan[obs.key][scan['plr'].idxmax()].round(2)))
         ax.set_ylabel("Counts")
         ax.legend(labels)
-        ax.set_xticks([])
+
 
         # calculate count ratio
         if len(scan_list) == 2:
@@ -215,11 +221,38 @@ def hist_1d(scan_list:list[Scan], observable_list:list[Observable]) -> None:
     return
 
 
+def hist_2d(scan_list:list[Scan], observable_list:list[Observable]) -> None:
+    for scan in scan_list:
+        fig = plt.figure(figsize=(6,6))
+        ax = fig.add_subplot(111)
+        ax.hist2d(scan[observable_list[0].key], scan[observable_list[1].key], bins=20)
+        ax.set_xlabel(f"{observable_list[0].label} {observable_list[0].unit}")
+        ax.set_ylabel(f"{observable_list[1].label} {observable_list[1].unit}")
+        ax.set_title(scan.name)
+
+        #fig.colorbar()
+
+        fig.tight_layout()
+        fig.savefig(f"../plots/hist_2d_{observable_list[0].label}_{observable_list[1].label}.png", dpi=1000)
+        plt.close(fig)
+
+    return
+
+
 
 # Entry point
 if __name__ == "__main__":
 
-    scan_list = load_hdf5_file(path_to_runs)
+
+    if args.path is not None:
+        input_paths = args.path
+    else:
+        input_paths = [path_to_default]
+    
+    scan_list = []
+    for path in input_paths:
+        scan_list.append(*load_hdf5_file(path))
+
     keys = [search_observable(scan_list[0], observable) for observable in observable_list]
     dimensions = [get_dimension(key) for key in keys]
     observable_list = [Observable(observable, key, dim) for observable, key, dim in zip(observable_list, keys, dimensions)]
@@ -230,3 +263,4 @@ if __name__ == "__main__":
         scatter_2d(scan_list, observable_list)
     plot_plr(scan_list, observable_list)
     hist_1d(scan_list, observable_list)
+    hist_2d(scan_list, observable_list)
