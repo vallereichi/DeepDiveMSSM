@@ -38,7 +38,7 @@ def load_hdf5_file(path:str) -> list[Scan]:
         path: pass a path to a hdf5 file or a directory containing hdf5 files
 
     returns:
-        list of tuples with the name of the scan and the pandas dataframe
+        list of Scan objects
     """
 
     if os.path.isdir(path):
@@ -73,9 +73,46 @@ def load_hdf5_file(path:str) -> list[Scan]:
     return [scan]
 
 def load_csv_file(path:str) -> list[Scan]:
+    """
+    load csv files and return a list of pandas dataframes with a name associated to the file.
+    csv files mainly contain ATLAS scan data
+
+    parameters:
+        path: pass a path to a csv file or a directory containing csv files
+
+    returns:
+        list of scan objects
+    """
+
+    if os.path.isdir(path):
+        scans = []
+        csv_paths = [p for p in Path(path).rglob('*.csv')]
+        for file in csv_paths:
+            scans.append(load_csv_file(file)[0])
+        return scans
+
     df = pd.read_csv(path)
     scan_name = os.path.splitext(os.path.basename(path))[0]
     print("File loaded: ", scan_name, "; ", path)
     scan = Scan(scan_name, df)
 
     return [scan]
+
+
+
+
+def load_scans(path:str) -> list[Scan]:
+
+    scan_list_hdf5 = []
+    scan_list_csv = []
+
+    try:
+        scan_list_csv = load_csv_file(path)
+    except:
+        print("No csv files specified!")
+    try:
+        scan_list_hdf5 = load_hdf5_file(path)
+    except:
+        print("No hdf5 files specified")
+    
+    return scan_list_csv + scan_list_hdf5

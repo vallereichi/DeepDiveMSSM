@@ -5,21 +5,21 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from util import load_hdf5_file, Scan, Observable
-from scan_info import scan_info
+from util import load_hdf5_file, load_scans, Scan, Observable
+from scan_info import scan_info, print_keys
 
 """
 define defaults for testing 
 """
 path_to_default = "../runs/version1/"
-path_to_diver_scan = "../runs/version1/MSSM_diver/samples/DIVER.hdf5"
-path_to_random_scan = "../runs/version1/MSSM_random/samples/RANDOM.hdf5"
+output_default = "../plots/version1/"
 
 COLORS = ['coral', 'darkcyan', 'orchid', 'darkseagreen', 'goldenrod']
 
 observable_list = [
-    "h0_1",
-    "A0",
+     "m_h",
+#    "h0_1",
+#    "A0",
 #    "chi0_1",
 #    "chi0_2",
 #    "chi0_3",
@@ -38,8 +38,9 @@ handle command line options
 """
 parser = argparse.ArgumentParser()
 parser.add_argument('-p', '--path', nargs='*', help="path to scan file. Pass in either a directory or the file path directly")
+parser.add_argument('-o', '--output', help="this defines were the plots will be saved")
+parser.add_argument('-i', '--info', action='store_true', help="select this option to display some general information about a scan")
 args = parser.parse_args()
-
 
 
 
@@ -113,7 +114,7 @@ def scatter_2d(scan_list:list[Scan], observable_list:list[Observable]) -> None:
 
         fig.tight_layout()
         #plt.show()
-        fig.savefig(f"../plots/2D_scatter_plot_{observable_list[0].label}_{observable_list[1].label}_{scan.name}.png", dpi=1000)
+        fig.savefig(outpath + f"/2D_scatter_plot_{observable_list[0].label}_{observable_list[1].label}_{scan.name}.png", dpi=1000)
         plt.close(fig)
 
         # TODO: add better colomap
@@ -150,7 +151,7 @@ def plot_plr(scan_list:list[Scan], observable_list:list[Observable]) -> None:
 
         fig.tight_layout()
         #plt.show()
-        fig.savefig(f"../plots/plr_plot_{obs.label}.png", dpi=1000)
+        fig.savefig(outpath + f"/plr_plot_{obs.label}.png", dpi=1000)
         plt.close(fig)
 
         
@@ -195,7 +196,7 @@ def hist_1d(scan_list:list[Scan], observable_list:list[Observable]) -> None:
         for id_scan, scan in enumerate(scan_list):
             count, _, _ = ax.hist(scan[obs.key], bins=bins, density=True, alpha=0.5, color=COLORS[id_scan+1])
             counts.append(count)
-            labels.append(scan.name + ": $\\mathcal{L}_{max} = $" + str(scan[obs.key][scan['plr'].idxmax()].round(2)))
+            #labels.append(scan.name + ": $\\mathcal{L}_{max} = $" + str(scan[obs.key][scan['plr'].idxmax()].round(2)))
         ax.set_ylabel("Counts")
         ax.legend(labels)
 
@@ -216,7 +217,7 @@ def hist_1d(scan_list:list[Scan], observable_list:list[Observable]) -> None:
 
         fig.tight_layout()
         #plt.show()
-        fig.savefig(f"../plots/hist_plot_{obs.label}.png", dpi=1000)
+        fig.savefig(outpath + f"/hist_plot_{obs.label}.png", dpi=1000)
         plt.close(fig)
     return
 
@@ -233,7 +234,7 @@ def hist_2d(scan_list:list[Scan], observable_list:list[Observable]) -> None:
         #fig.colorbar()
 
         fig.tight_layout()
-        fig.savefig(f"../plots/hist_2d_{observable_list[0].label}_{observable_list[1].label}_{scan.name}.png", dpi=1000)
+        fig.savefig(outpath + f"/hist_2d_{observable_list[0].label}_{observable_list[1].label}_{scan.name}.png", dpi=1000)
         plt.close(fig)
 
     return
@@ -249,11 +250,18 @@ if __name__ == "__main__":
     else:
         input_paths = [path_to_default]
 
+    outpath = output_default
+    if args.output is not None:
+        outpath = args.output
+
+    
+
+
     
     # Load scans from the provided paths
     scan_list = []
     for path in input_paths:
-        scan_list.append(load_hdf5_file(path))
+        scan_list.append(load_scans(path))
     # Flatten the scan_list
     scan_list = [item for sublist in scan_list for item in sublist]
 
@@ -269,5 +277,11 @@ if __name__ == "__main__":
     if len(observable_list) == 2:
         scatter_2d(scan_list, observable_list)
         hist_2d(scan_list, observable_list)
-    plot_plr(scan_list, observable_list)
-    hist_1d(scan_list, observable_list)
+    #plot_plr(scan_list, observable_list)
+    hist_1d(scan_list, observable_list) 
+
+
+    if args.info:
+        for scan in scan_list:
+            print_keys(scan)
+            scan_info(scan)

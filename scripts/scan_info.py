@@ -1,7 +1,7 @@
 import pandas as pd
 import argparse
 import os
-from util import Scan, load_hdf5_file, load_csv_file
+from util import Scan, load_hdf5_file, load_csv_file, load_scans
 
 def scan_info(scan:Scan) -> None:
     """
@@ -35,23 +35,25 @@ if __name__ == "__main__":
 
     if args.path is not None:
         print("Loading scans from the specified path(s).")
-        scan_list = []
-        _, suffix = os.path.splitext(args.path[0]) 
+        #scan_list = []
+        #_, suffix = os.path.splitext(args.path[0]) 
+#
+        #for path in args.path:
+        #    if not os.path.exists(path):
+        #        raise ValueError(f"Path {path} does not exist.")
+        #    
+        #    if os.path.isdir(path):
+        #        scan_list = load_hdf5_file(path)
+        #    elif suffix == ".hdf5":
+        #        scan_list.append(load_hdf5_file(path)[0])
+        #    elif suffix == ".csv":
+        #        scan_list.append(load_csv_file(path)[0])
 
-        for path in args.path:
-            if not os.path.exists(path):
-                raise ValueError(f"Path {path} does not exist.")
-            
-            if os.path.isdir(path):
-                scan_list = load_hdf5_file(path)
-            elif suffix == ".hdf5":
-                scan_list.append(load_hdf5_file(path)[0])
-            elif suffix == ".csv":
-                scan_list.append(load_csv_file(path)[0])
+        scan_list = load_scans(args.path[0])
         
     else:
         print("No path specified. Loading all scans from the runs directory.")
-        scan_list = load_hdf5_file("../version1/runs")
+        scan_list = load_hdf5_file("../runs/version1")
 
     
     if args.keys:
