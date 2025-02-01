@@ -233,7 +233,7 @@ def hist_2d(scan_list:list[Scan], observable_list:list[Observable]) -> None:
         #fig.colorbar()
 
         fig.tight_layout()
-        fig.savefig(f"../plots/hist_2d_{observable_list[0].label}_{observable_list[1].label}.png", dpi=1000)
+        fig.savefig(f"../plots/hist_2d_{observable_list[0].label}_{observable_list[1].label}_{scan.name}.png", dpi=1000)
         plt.close(fig)
 
     return
@@ -243,24 +243,31 @@ def hist_2d(scan_list:list[Scan], observable_list:list[Observable]) -> None:
 # Entry point
 if __name__ == "__main__":
 
-
+    # check for command line inputs
     if args.path is not None:
         input_paths = args.path
     else:
         input_paths = [path_to_default]
+
     
+    # Load scans from the provided paths
     scan_list = []
     for path in input_paths:
-        scan_list.append(*load_hdf5_file(path))
+        scan_list.append(load_hdf5_file(path))
+    # Flatten the scan_list
+    scan_list = [item for sublist in scan_list for item in sublist]
+
 
     keys = [search_observable(scan_list[0], observable) for observable in observable_list]
     dimensions = [get_dimension(key) for key in keys]
     observable_list = [Observable(observable, key, dim) for observable, key, dim in zip(observable_list, keys, dimensions)]
     
+    # create all plots
     for obs in observable_list:
         print(obs)
+    
     if len(observable_list) == 2:
         scatter_2d(scan_list, observable_list)
+        hist_2d(scan_list, observable_list)
     plot_plr(scan_list, observable_list)
     hist_1d(scan_list, observable_list)
-    hist_2d(scan_list, observable_list)
