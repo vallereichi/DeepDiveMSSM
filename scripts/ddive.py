@@ -18,6 +18,9 @@ COLORS = ['coral', 'darkcyan', 'orchid', 'darkseagreen', 'goldenrod']
 
 observable_list = [
      "m_h",
+     "tan_beta",
+     "M_2",
+     
 #    "h0_1",
 #    "A0",
 #    "chi0_1",

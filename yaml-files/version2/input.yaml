@@ -40,7 +40,7 @@ Printer:
 
 Scanner:
 
- use_scanner: multinest
+ use_scanner: random
 
  scanners:
    multinest:
@@ -52,7 +52,7 @@ Scanner:
 
    random:
      plugin: random
-     point_number: 100
+     point_number: 10
      like:  LogLike
      printme: false
 
@@ -80,6 +80,14 @@ ObsLikes:
     capability: lnL_t_mass
   - purpose: LogLike
     capability: lnL_Z_mass
+
+  # DarkBit
+  - purpose: Observable
+    capability: lnL_oh2
+  - purpose:    Observable
+    capability: RD_oh2
+  - purpose: Observable
+    cabability: mwimp 
   
 
 Rules:
@@ -89,6 +97,41 @@ Rules:
     type: Spectrum
     function: make_MSSM_precision_spectrum_none
   - capability: unimproved_MSSM_spectrum
-    function: get_MSSMatQ_spectrum
+    type: Spectrum
+    function: get_MSSM_spectrum_Spheno
+    options:
+      n_run: 10
+      delta_mass: 1.0e-4
   
+  # DarkBit
+  - capability: TH_ProcessCatalog
+    function: TH_ProcessCatalog_DS_MSSM
+    options:
+      ignore_three_body: false
+      ProcessCatalog_MinBranching: 0
+  - capability: lnL_oh2
+    function: lnL_oh2_Simple
+  - capability: RD_oh2
+    function: RD_oh2_MicrOmegas
 
+
+Logger:
+
+  redirection: 
+    [Debug]: "debug.log"
+    [Default]: "default.log"
+    [SpecBit]: "SpecBit.log"
+    [PrecisionBit] : "PrecBit.log"
+    [DarkBit] : "DarkBit.log"
+
+KeyValues:
+
+  default_output_path: "runs/MSSM_SCANNER"
+
+  dependency_resolution: 
+    prefer_model_specific_functions: true
+
+  likelihood:
+    model_invalid_for_lnlike_below: -1e5
+
+  debug: true
