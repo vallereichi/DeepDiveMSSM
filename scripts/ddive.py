@@ -17,24 +17,22 @@ output_default = "../plots/version1/"
 COLORS = ['coral', 'darkcyan', 'orchid', 'darkseagreen', 'goldenrod']
 
 observable_list = [
-     "m_h",
-     "tan_beta",
-     "M_2",
-     
-#    "h0_1",
-#    "A0",
-#    "chi0_1",
-#    "chi0_2",
-#    "chi0_3",
-#    "~chi+",
-#    "~chi-",
-#    ":t",
-#    "mstop1",
-#    "mstop2",
-#    "sinW2 dimensionless",
-#    "tanbeta",
-#    "Z0",
-#    ":W+",
+    "At",
+    "Ab",
+    "Atau",
+    "meL",
+    "mmuL",
+    "mtauL",
+    "meR",
+    "mmuR",
+    "mtauR",
+    "mqL1",
+    "mqL3",
+    "muR",
+    "mtR",
+    "mdR",
+    "mbR",
+
     ]
 """
 handle command line options
@@ -67,7 +65,8 @@ def search_observable(scan:Scan, search:str) -> str:
         if re.search(f'{search}(?!.*_isvalid)', string) is not None:
             key = string
             print("Key found: ", key)
-            break
+            if key == search:
+                break
 
     if key == '':
         raise ValueError(f"no key found for '{search}'")

@@ -1,10 +1,11 @@
 import numpy as np
 import random
+import time
 import likelihoods
 from likelihoods import comb_likelihood, eval_likelihood
 
 # define parameters
-NP = 100
+NP = 10000
 F = 0.8
 Cr = 0.8
 
@@ -23,7 +24,7 @@ def initialize_population(NP:int, ranges:list) -> list[np.array]:
     while len(np.unique(population, axis=0)) != len(population):          
         population = [[random.uniform(ranges[i][0], ranges[i][1]) for i in range(len(ranges))] for _ in range(NP)]  
 
-    print(f"Population initialized with {len(population)} points in the {len(ranges)}-dimensional space.") 
+    #print(f"Population initialized with {len(population)} points in the {len(ranges)}-dimensional space.") 
     return population
 
 
@@ -36,7 +37,7 @@ def update(population:list[np.array], mutation, crossover):
     improvement = selection(population, target,target_id, trial)
 
 
-    print("Improvement:", improvement)
+    ##print("Improvement:", improvement)
     return population, improvement
 
 # Mutation
@@ -77,8 +78,8 @@ def selection(population:list[np.array], target:np.array, target_id:int, trial:n
     
         improvement = max(trial_lh-target_lh, 0)
         
-        print("\nTarget likelihood:", target_lh)
-        print("Trial likelihood:", trial_lh)
+        #print("\nTarget likelihood:", target_lh)
+        #print("Trial likelihood:", trial_lh)
         
         return improvement
 
@@ -92,6 +93,7 @@ main entry point
 """
 def main():
 
+    start = time.time()
     population = initialize_population(NP, ranges)
     population_list = [population]
     improvement = 0
@@ -105,11 +107,11 @@ def main():
         if 0 < improvement < conv_threshold:
             break
 
-
+    end = time.time()       
     # print("\nFinal population:")
     # for point in population:
     #    print(point)
-
+    print("total time: ", end-start)
 
 
 
