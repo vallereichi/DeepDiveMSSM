@@ -6,40 +6,164 @@ import matplotlib.pyplot as plt
 from de import *
 
 def main():
-    print("running Differential Evolution")
-    times = []
-    processes = range(10,1000)
 
-    for NP in tqdm(processes):
+    ranges = [
+        [20, 60],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+        [30, 90],
+    ]
 
-        start_time = time.time()
-        population = initialize_population(NP, ranges)
-        population_list = [population]
-        improvement = 0
-
-        while len(population_list) < MAX_ITER:
-            population, improvement = update(population, mutate_rand_one, crossover_bin)
-            population_list.append(population)
-
-            if 0 < improvement < conv_threshold:
-                break
-
-        end_time = time.time()
-        elapsed_time = end_time - start_time
-        times.append(elapsed_time)
-        
-
-    print(len(times))
+    fig1 = plt.figure(figsize=(5,5))
+    ax1 = fig1.add_subplot(111)
+    ax1.set_xlabel("NP")
+    ax1.set_ylabel("time in s")
     
-    plt.scatter(processes, times, marker='.', color='coral', alpha=0.5, label="rand/1/bin")
-    plt.xlabel("NP")
-    plt.ylabel("time in s")
-    plt.legend()
-    plt.savefig("test_results.png", dpi=1000)
+    fig2 = plt.figure(figsize=(5,5))
+    ax2 = fig2.add_subplot(111)
+    ax2.set_xlabel("NP")
+    ax2.set_ylabel("time in s")
 
-    with open("test_data.csv", 'w') as file:
-        for t in times:
-            file.write(str(t))
+    for i in range(0,90,10):
+        test_ranges = ranges[:100-i]
+        print("running Differential Evolution with ", str(len(test_ranges)), " parameters")
+        times_total = []
+        times_update = []
+        processes = range(10,1000)
+
+        for NP in tqdm(processes):
+
+            start_time = time.time()
+            population = initialize_population(NP, test_ranges)
+            population_list = [population]
+            improvement = 0
+
+            mean_time_update = []
+
+            while len(population_list) < MAX_ITER:
+                start = time.time()
+                population, improvement = update(population, mutate_rand_one, crossover_bin)
+                end = time.time()
+                mean_time_update.append(end-start)
+                population_list.append(population)
+
+                if 0 < improvement < conv_threshold:
+                    break
+                
+                
+            end_time = time.time()
+            elapsed_time_total = end_time - start_time
+            elapsed_time_update = np.mean(mean_time_update)
+            times_total.append(elapsed_time_total)
+            times_update.append(elapsed_time_update)
+        
+        ax1.scatter(processes, times_total, marker='.', alpha=0.5, label=f"{len(test_ranges)} parameters")
+        ax2.scatter(processes, times_update, marker='.', alpha=0.5, label=f"{len(test_ranges)} parameters")
+
+    ax1.legend()
+    fig1.tight_layout()
+    fig1.savefig("total_time.png", dpi=1000)
+
+    ax2.legend()
+    fig2.tight_layout()
+    fig2.savefig("update_time.png", dpi=1000)
+
     
 
 
