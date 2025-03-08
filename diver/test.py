@@ -1,4 +1,4 @@
-import time
+import time, os
 from tqdm import tqdm
 import numpy as np
 import pandas as pd
@@ -7,17 +7,26 @@ import matplotlib.pyplot as plt
 
 from de import *
 
-def save_to_file(df:dict, file_path:str) -> None:
-    file = open(file_path, 'ab')
-    pickle.dump(df, file)
-    file.close()
+
 
 def main():
 
     ranges = [[0,100]]
-     
+    start_population_size = 10
+    end_population_size = 500
+    step_size = 10
 
-    for i in range(10,500,10):
+    if not os.path.isfile("test_results"):
+        test_results = {}
+        file = open('test_results', 'ab')
+        pickle.dump(test_results, file)
+        file.close()
+    else:
+        file = open("test_results", 'rb')
+        test_results = pickle.load(file)
+        start_population_size = max([int(i.split()[0]) for i in test_results.keys()]) + step_size
+
+    for i in range(start_population_size,end_population_size,step_size):
         test_ranges = ranges*i
         print("running Differential Evolution with ", str(len(test_ranges)), " parameters")
         times_total = []
@@ -53,14 +62,21 @@ def main():
             n_steps.append(len(population_list))
 
         
-        test_results = {
-            f"{len(test_ranges)} parameters": {
+        file = open("test_results", 'rb')
+        test_results = pickle.load(file)
+        file.close()
+
+        test_results[f"{len(test_ranges)} parameters"] = {
                 "times total": times_total,
                 "times update": times_update,
                 "iterations": n_steps,
             }
-        }
-        save_to_file(test_results, "test_results")
+        
+        file = open("test_results", 'wb')
+        pickle.dump(test_results, file)
+        file.close()
+        
+        
 
     
     
