@@ -37,7 +37,7 @@ def update(population:list[np.array], mutation, crossover):
     improvement = selection(population, target,target_id, trial)
 
 
-    ##print("Improvement:", improvement)
+    #print("Improvement:", improvement)
     return population, improvement
 
 # Mutation

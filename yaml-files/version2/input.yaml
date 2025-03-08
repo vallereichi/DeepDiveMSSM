@@ -4,7 +4,7 @@ Parameters:
 
     #MSSM Parameters
     MSSM19atQ_mA:
-        Ab_3:
+        Ad_3:
             range: [-2000.0,2000.0]
         Ae_3:
             range: [-2000.0,2000.0]
@@ -44,6 +44,52 @@ Parameters:
             fixed_value: 10e3
         mu2_3:
             range: [2000.0,5000.0]
+
+    
+
+    # MSSM19atQ:
+    #     Ad_3:
+    #         range: [-2000.0,2000.0]
+    #     Ae_3:
+    #         range: [-2000.0,2000.0]
+    #     Au_3:
+    #         range: [-8000.0,8000.0]
+    #     M1:
+    #         range: [-2000.0,2000.0]
+    #     M2:
+    #         range: [-2000.0,2000.0]
+    #     M3:
+    #         range: [1000.0,5000.0]
+    #     Qin:
+    #         fixed_value: 2000.0
+    #     TanBeta:
+    #         range: [1.0,60.0]
+    #     mHd2:
+    #         range: [1000.0,5000.0]
+    #     mHu2:
+    #         range: [1000.0, 5000.0]
+    #     md2_12:
+    #         fixed_value: 10e3
+    #     md2_3:
+    #         range: [2000.0,5000.0]
+    #     me2_12:
+    #         fixed_value: 10e3
+    #     me2_3:
+    #         fixed_value: 10e3
+    #     ml2_12:
+    #         fixed_value: 10e3
+    #     ml2_3:
+    #         fixed_value: 10e3
+    #     mq2_12:
+    #         fixed_value: 10e3
+    #     mq2_3:
+    #         range: [2000.0,5000.0]
+    #     SignMu:
+    #         range: [-1.,1.]
+    #     mu2_12:
+    #         fixed_value: 10e3
+    #     mu2_3:
+    #         range: [2000.0,5000.0]
 
 
 Priors:
