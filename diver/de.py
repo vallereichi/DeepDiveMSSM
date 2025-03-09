@@ -5,13 +5,15 @@ import likelihoods
 from likelihoods import comb_likelihood, eval_likelihood
 
 # define parameters
-NP = 10000
-F = 0.8
-Cr = 0.8
+NP = 100                # population size
+F = 0.8                 # Mutation scaling factor
+Cr = 0.8                # Crossover rate
 
+# convergence restrictions
 conv_threshold = 1e-3
 MAX_ITER = 10000
 
+# defining the parameter space
 ranges = [[20, 60], [30, 90]]
 likelihood_list = [(likelihoods.gaussian, [50, 20]), (likelihoods.gaussian, [70, 10])]
 
@@ -20,6 +22,16 @@ likelihood_list = [(likelihoods.gaussian, [50, 20]), (likelihoods.gaussian, [70,
 function declarations
 """
 def initialize_population(NP:int, ranges:list) -> list[np.array]:
+    """
+    creating the initial population by randomly selecting the chosen number of points from the given parameter space
+
+    parameters: 
+        NP:     population size
+        ranges: list of ranges for every dimension of the parameter space
+
+    returns:    
+        list of points in the parameter space composing the first generation
+    """
     population = [[random.uniform(ranges[i][0], ranges[i][1]) for i in range(len(ranges))] for _ in range(NP)]   
     while len(np.unique(population, axis=0)) != len(population):          
         population = [[random.uniform(ranges[i][0], ranges[i][1]) for i in range(len(ranges))] for _ in range(NP)]  
@@ -29,6 +41,18 @@ def initialize_population(NP:int, ranges:list) -> list[np.array]:
 
 
 def update(population:list[np.array], mutation, crossover):
+    """
+    perform one iteration of the selected differential evolution
+
+    parameters:
+        population: list of the current generation of points in the parameter space
+        mutation:   the mutation scheme function (e.g. "1")
+        crossover:  the crossover function (e.g. binary)
+
+    returns:
+        population: list of the next generation of points in the parameter space
+        improvement: over the last generation. Needed for determining convergance
+    """
     target = random.choice(population)
     target_id = np.where([np.array_equal(target, indiv) for indiv in population])[0][0]                                        # TODO add more target options
 
@@ -42,6 +66,17 @@ def update(population:list[np.array], mutation, crossover):
 
 # Mutation
 def mutate_rand_one(population:list[np.array], target:np.array, F:float) -> np.array:
+        """
+        perform the mutation step according to the "rand/one" scheme
+
+        parameters:
+            population: list of the current generation of points in the parameter space
+            target:     target_vector from the current generation
+            F:          Mutation scale factor
+
+        returns:
+            donor_vector 
+        """
         a, b, c = np.array(random.sample(population, 3))
         while any(np.array_equal(x, target) for x in [a, b, c]):
             a, b, c = np.array(random.sample(population, 3))
@@ -52,6 +87,17 @@ def mutate_rand_one(population:list[np.array], target:np.array, F:float) -> np.a
 
 # Crossover
 def crossover_bin(target:np.array, donor:np.array, Cr:float) -> np.array:
+        """
+        performing the binary crossover
+
+        parameters:
+            target: target_vector
+            donor:  donor_vector
+            Cr:     Crossover rate
+
+        returns:
+            trial_vector
+        """
        
         trial = np.zeros_like(target)
         for k in range(len(target)):
@@ -68,6 +114,18 @@ def crossover_bin(target:np.array, donor:np.array, Cr:float) -> np.array:
 
 # Selection
 def selection(population:list[np.array], target:np.array, target_id:int, trial:np.array) -> float:
+        """
+        Final selection for the next generation. Choosing the vector with the best likelihood in a greedy fashion from the target_vector and the trial_vector
+
+        parameters:
+            population: list of the current generation of points in the parameter space
+            target:     target_vector
+            target_id:  index of the target_vector in the current population
+            trial:      trial_vector
+
+        returns:
+            improvement over the last generation. Needed for determining convergance
+        """
         
         target_lh = comb_likelihood([eval_likelihood(lh[0], lh[1], target[i]) for i, lh in enumerate(likelihood_list)])
         trial_lh = comb_likelihood([eval_likelihood(lh[0], lh[1], trial[i]) for i, lh in enumerate(likelihood_list)])
@@ -111,7 +169,7 @@ def main():
     # print("\nFinal population:")
     # for point in population:
     #    print(point)
-    print("total time: ", end-start)
+    #print("total time: ", end-start)
 
 
 
