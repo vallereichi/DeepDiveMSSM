@@ -1,53 +1,9 @@
 Parameters:
-    #Standar Model Parameters
+    #Standard Model Parameters
     StandardModel_SLHA2: !import include/StandardModel_SLHA2_scan.yaml
 
     #MSSM Parameters
-    MSSM19atQ_mA:
-        Ad_3:
-            range: [-2000.0,2000.0]
-        Ae_3:
-            range: [-2000.0,2000.0]
-        Au_3:
-            range: [-8000.0,8000.0]
-        M1:
-            range: [-2000.0,2000.0]
-        M2:
-            range: [-2000.0,2000.0]
-        M3:
-            range: [1000.0,5000.0]
-        Qin:
-            fixed_value: 2000.0
-        TanBeta:
-            range: [1.0,60.0]
-        mA:
-            range: [0.0,5000.0]
-        md2_12:
-            fixed_value: 10e3
-        md2_3:
-            range: [2000.0,5000.0]
-        me2_12:
-            fixed_value: 10e3
-        me2_3:
-            fixed_value: 10e3
-        ml2_12:
-            fixed_value: 10e3
-        ml2_3:
-            fixed_value: 10e3
-        mq2_12:
-            fixed_value: 10e3
-        mq2_3:
-            range: [2000.0,5000.0]
-        mu:
-            range: [-2000.0,2000.0]
-        mu2_12:
-            fixed_value: 10e3
-        mu2_3:
-            range: [2000.0,5000.0]
-
-    
-
-    # MSSM19atQ:
+    # MSSM19atQ_mA:
     #     Ad_3:
     #         range: [-2000.0,2000.0]
     #     Ae_3:
@@ -64,10 +20,8 @@ Parameters:
     #         fixed_value: 2000.0
     #     TanBeta:
     #         range: [1.0,60.0]
-    #     mHd2:
-    #         range: [1000.0,5000.0]
-    #     mHu2:
-    #         range: [1000.0, 5000.0]
+    #     mA:
+    #         range: [0.0,5000.0]
     #     md2_12:
     #         fixed_value: 10e3
     #     md2_3:
@@ -84,21 +38,101 @@ Parameters:
     #         fixed_value: 10e3
     #     mq2_3:
     #         range: [2000.0,5000.0]
-    #     SignMu:
-    #         range: [-1.,1.]
+    #     mu:
+    #         range: [-2000.0,2000.0]
     #     mu2_12:
     #         fixed_value: 10e3
     #     mu2_3:
     #         range: [2000.0,5000.0]
+
+    
+
+    MSSM19atQ:
+        Ad_3:
+            range: [-2000.0,2000.0]
+        Ae_3:
+            range: [-2000.0,2000.0]
+        Au_3:
+            range: [-8000.0,8000.0]
+        M1:
+            range: [-2000.0,2000.0]
+        M2:
+            range: [-2000.0,2000.0]
+        M3:
+            range: [1000.0,5000.0]
+        Qin:
+            fixed_value: 2000.0
+        TanBeta:
+            range: [1.0,60.0]
+        mHd2:
+            range: [1000.0,5000.0]
+        mHu2:
+            range: [1000.0, 5000.0]
+        md2_12:
+            fixed_value: 10e3
+        md2_3:
+            range: [2000.0,5000.0]
+        me2_12:
+            fixed_value: 10e3
+        me2_3:
+            fixed_value: 10e3
+        ml2_12:
+            fixed_value: 10e3
+        ml2_3:
+            fixed_value: 10e3
+        mq2_12:
+            fixed_value: 10e3
+        mq2_3:
+            range: [2000.0,5000.0]
+        SignMu:
+            range: [-1.,1.]
+        mu2_12:
+            fixed_value: 10e3
+        mu2_3:
+            range: [2000.0,5000.0]
 
 
 Priors:
     #all priors are simple
 
 ObsLikes:
+    # Observables
     - purpose: Observable
       capability: MSSM_spectrum
       type: map_str_dbl
+
+    - purpose: Observable
+      capability: muon_gm2
+
+    - purpose: Observable
+      capability: RD_oh2
+
+
+    # LogLikes
+    - purpose: LogLike
+      capability: lnL_gm2
+
+    - purpose: LogLike
+      capability: lnL_t_mass
+
+    - purpose: LogLike
+      capability: lnL_Z_mass
+
+    - purpose: LogLike
+      capability: lnL_W_mass
+
+    - purpose: LogLike
+      capability: lnL_h_mass
+
+    - purpose: LogLike
+      capability: lnL_alpha_em
+
+    - purpose: LogLike
+      capability: lnL_alpha_s
+
+    - purpose: LogLike
+      capability: lnL_GF
+    
 
 Rules:
     - capability: unimproved_MSSM_spectrum
@@ -111,6 +145,27 @@ Rules:
     - capability: MSSM_spectrum
       type: Spectrum
       function: make_MSSM_precision_spectrum_none
+
+    - capability: muon_gm2
+      function: GM2C_SUSY
+
+    - capability: lnL_gm2
+      function: lnL_gm2
+      dependencies: 
+        - capability: muon_gm2_SM
+          function: gm2_SM_ee
+
+    - capability: mw
+      function: mw_from_MSSM_spectrum
+
+    - capability: mh
+      function: mh_from_MSSM_spectrum
+
+    
+
+    - capability: RD_oh2
+      function: RD_oh2_general
+
       
 
 Printer:
@@ -146,6 +201,8 @@ Logger:
         [Debug]: "debug.log"
         [Core] : "core.log"
         [Dependency Resolver] : "dep_res.log"
+        [PrecisionBit] : "prec_bit.log"
+        [SpecBit] : "spec_bit.log"
 
 
 
