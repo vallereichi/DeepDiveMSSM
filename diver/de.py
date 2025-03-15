@@ -1,11 +1,13 @@
 import numpy as np
 import random
 import time
-import likelihoods
-from likelihoods import comb_likelihood, eval_likelihood
+from collections.abc import Callable
+from typing import Union, Optional
+import objective_functions as objective_functions
+from objective_functions import evaluate_objective_function
 
 # define parameters
-NP = 100                # population size
+NP = 10                # population size
 F = 0.8                 # Mutation scaling factor
 Cr = 0.8                # Crossover rate
 
@@ -14,8 +16,9 @@ conv_threshold = 1e-3
 MAX_ITER = 10000
 
 # defining the parameter space
-ranges = [[20, 60], [30, 90]]
-likelihood_list = [(likelihoods.gaussian, [50, 20]), (likelihoods.gaussian, [70, 10])]
+ranges = [[-100, 100], [-100,100]]
+objective_function:Callable[[np.array], float] = objective_functions.gaussian
+
 
 
 """
@@ -40,7 +43,7 @@ def initialize_population(NP:int, ranges:list) -> list[np.array]:
     return population
 
 
-def update(population:list[np.array], mutation, crossover):
+def update(population:list[np.array], mutation:Callable[[list[np.array], np.array, float], np.array], crossover:Callable[[np.array, np.array, float], np.array]):
     """
     perform one iteration of the selected differential evolution
 
@@ -127,8 +130,8 @@ def selection(population:list[np.array], target:np.array, target_id:int, trial:n
             improvement over the last generation. Needed for determining convergance
         """
         
-        target_lh = comb_likelihood([eval_likelihood(lh[0], lh[1], target[i]) for i, lh in enumerate(likelihood_list)])
-        trial_lh = comb_likelihood([eval_likelihood(lh[0], lh[1], trial[i]) for i, lh in enumerate(likelihood_list)])
+        target_lh = evaluate_objective_function(objective_function, target)
+        trial_lh = evaluate_objective_function(objective_function, trial)
 
         if trial_lh > target_lh:
             if not any(np.array_equal(trial, indiv) for indiv in population):
@@ -166,10 +169,10 @@ def main():
             break
 
     end = time.time()       
+    print("total time: ", end-start)
     # print("\nFinal population:")
     # for point in population:
     #    print(point)
-    #print("total time: ", end-start)
 
 
 
