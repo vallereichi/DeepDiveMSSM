@@ -107,6 +107,9 @@ ObsLikes:
     - purpose: Observable
       capability: RD_oh2
 
+    - purpose: Observable
+      capability: mwimp
+
 
     # LogLikes
     - purpose: LogLike
@@ -132,6 +135,9 @@ ObsLikes:
 
     - purpose: LogLike
       capability: lnL_GF
+
+    - purpose: LogLike
+      capability: lnL_oh2
     
 
 Rules:
@@ -161,10 +167,42 @@ Rules:
     - capability: mh
       function: mh_from_MSSM_spectrum
 
-    
-
     - capability: RD_oh2
-      function: RD_oh2_general
+      function: RD_oh2_MicrOmegas
+
+    - capability: decay_rates
+      type: DecayTable
+      function: all_decays
+      
+    - capability: A0_decay_rates
+      function: A0_decays
+
+    - capability: H_plus_decay_rates
+      function: H_plus_decays
+
+    - capability: Higgs_decay_rates
+      function: SM_Higgs_decays
+
+    - capability: h0_2_decay_rates
+      function: h0_2_decays
+
+    - capability: t_decay_rates
+      function: t_decays
+
+    - capability: Reference_SM_Higgs_decay_rates
+      function: Ref_SM_Higgs_decays_table
+
+    - capability: lnL_oh2
+      function: lnL_oh2_upperlimit
+
+    - capability: DarkMatter_ID
+      function: DarkMatter_ID_MSSM
+
+    - capability: TH_ProcessCatalog
+      function: TH_ProcessCatalog_SingletDM
+
+    
+      
 
       
 
